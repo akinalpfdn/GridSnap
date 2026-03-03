@@ -1,0 +1,36 @@
+:root {
+  --gs-bg-base:        var(--theme-bg-base);
+  --gs-bg-surface:     var(--theme-bg-surface);
+  --gs-bg-elevated:    var(--theme-bg-elevated);
+  --gs-bg-overlay:     var(--theme-bg-overlay);
+
+  --gs-border-subtle:  var(--theme-border-subtle);
+  --gs-border-default: var(--theme-border-default);
+
+  --gs-text-primary:   var(--theme-text-primary);
+  --gs-text-secondary: var(--theme-text-secondary);
+  --gs-text-muted:     var(--theme-text-muted);
+  --gs-text-disabled:  var(--theme-text-disabled);
+
+  --gs-accent:         var(--theme-accent);
+  --gs-accent-hover:   var(--theme-accent-hover);
+  --gs-accent-subtle:  var(--theme-accent-subtle);
+
+  --gs-status-success: var(--theme-status-success);
+  --gs-status-danger:  var(--theme-status-danger);
+  --gs-status-warning: var(--theme-status-warning);
+  --gs-status-info:    var(--theme-status-info);
+
+  --gs-font-mono:      var(--theme-font-mono);
+  --gs-font-sans:      var(--theme-font-sans);
+
+  --gs-radius-sm:      4px;
+  --gs-radius-md:      6px;
+  --gs-radius-lg:      8px;
+
+  --gs-space-xs:       4px;
+  --gs-space-sm:       8px;
+  --gs-space-md:       12px;
+  --gs-space-lg:       16px;
+  --gs-space-xl:       24px;
+}

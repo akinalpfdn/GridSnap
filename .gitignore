@@ -1,0 +1,35 @@
+# Build outputs
+gridsnap/src-tauri/target/
+gridsnap/dist/
+
+# Dependencies
+gridsnap/node_modules/
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude / AI
+.claude/
+
+# Docs (devplan kept outside repo)
+docs/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tauri build bundles (large binaries)
+gridsnap/src-tauri/target/

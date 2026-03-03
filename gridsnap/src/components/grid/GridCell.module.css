@@ -1,0 +1,58 @@
+.cell {
+  position: absolute;
+  border-right: 1px solid var(--gs-border-subtle);
+  border-bottom: 1px solid var(--gs-border-subtle);
+  cursor: cell;
+  font-family: var(--gs-font-mono);
+  font-size: 13px;
+  color: var(--gs-text-primary);
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cell:hover {
+  background: var(--gs-bg-elevated);
+}
+
+.selected {
+  background: var(--gs-accent-subtle);
+  outline: 1.5px solid var(--gs-accent);
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+.masked {
+  color: var(--gs-text-muted);
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.searchHit {
+  background: rgba(201, 184, 112, 0.12);
+}
+
+.copyBtn {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--gs-radius-sm);
+  color: var(--gs-accent);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.copyBtn:hover {
+  opacity: 1;
+  background: var(--gs-accent-subtle);
+}

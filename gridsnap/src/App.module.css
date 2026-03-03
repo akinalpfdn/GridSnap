@@ -1,0 +1,12 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--gs-bg-base);
+}
+
+.gridArea {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}

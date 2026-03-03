@@ -1,0 +1,26 @@
+[data-theme="carbon"] {
+  --theme-bg-base:        #141110;
+  --theme-bg-surface:     #1C1917;
+  --theme-bg-elevated:    #231F1C;
+  --theme-bg-overlay:     #2C2724;
+
+  --theme-border-subtle:  #302B27;
+  --theme-border-default: #3D3630;
+
+  --theme-text-primary:   #F5F0EB;
+  --theme-text-secondary: #C8BFB6;
+  --theme-text-muted:     #8A7F76;
+  --theme-text-disabled:  #5C534B;
+
+  --theme-accent:         #D4915E;
+  --theme-accent-hover:   #E4A673;
+  --theme-accent-subtle:  rgba(212, 145, 94, 0.09);
+
+  --theme-status-success: #7EBF8E;
+  --theme-status-danger:  #C97070;
+  --theme-status-warning: #C9B870;
+  --theme-status-info:    #7BA3C9;
+
+  --theme-font-mono:      'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --theme-font-sans:      'Inter', system-ui, -apple-system, sans-serif;
+}

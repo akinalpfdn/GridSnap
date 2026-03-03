@@ -1,0 +1,11 @@
+body {
+  font-family: var(--gs-font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--gs-text-primary);
+  background: var(--gs-bg-base);
+}
+
+code, pre, .mono {
+  font-family: var(--gs-font-mono);
+}

@@ -1,0 +1,96 @@
+.container {
+  display: flex;
+  align-items: stretch;
+  background: var(--gs-bg-base);
+  border-top: 1px solid var(--gs-border-subtle);
+  height: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--gs-text-secondary);
+  cursor: pointer;
+  border-top: 2px solid transparent;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.tab:hover {
+  background: var(--gs-bg-elevated);
+  color: var(--gs-text-primary);
+}
+
+.tabActive {
+  background: var(--gs-bg-surface);
+  color: var(--gs-text-primary);
+  font-weight: 500;
+}
+
+.tabIcon {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.tabClose {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--gs-radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: var(--gs-text-muted);
+}
+
+.tab:hover .tabClose {
+  opacity: 1;
+}
+
+.tabClose:hover {
+  background: var(--gs-status-danger);
+  color: white;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  color: var(--gs-text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.addBtn:hover {
+  color: var(--gs-accent);
+}
+
+.maskedIcon {
+  font-size: 10px;
+  color: var(--gs-text-muted);
+}
+
+.renameInput {
+  background: var(--gs-bg-overlay);
+  color: var(--gs-text-primary);
+  border: 1px solid var(--gs-accent);
+  border-radius: var(--gs-radius-sm);
+  padding: 0 4px;
+  font-size: 12px;
+  width: 80px;
+}
