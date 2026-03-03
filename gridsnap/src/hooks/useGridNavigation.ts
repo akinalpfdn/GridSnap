@@ -76,10 +76,10 @@ export function useGridNavigation() {
           useVaultStore.getState().clearCell(row, col);
           break;
         default:
-          // Type-to-edit: any printable character starts editing
+          // Type-to-edit: any printable character starts editing with that char
           if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            useVaultStore.getState().setCellValue(row, col, e.key);
-            setEditing(true);
+            e.preventDefault();
+            setEditing(true, e.key);
           }
           break;
       }

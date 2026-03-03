@@ -3,7 +3,6 @@ import type { Sheet, Vault } from "../types/vault";
 import type { GridSelection } from "../types/grid";
 import { encodeCellKey } from "../utils/cellKey";
 import { saveVault } from "../services/vaultService";
-import { debounce } from "../utils/debounce";
 
 interface VaultStore {
   // State
@@ -11,8 +10,11 @@ interface VaultStore {
   activeSheetIndex: number;
   selection: GridSelection | null;
   editing: boolean;
+  editInitialChar: string | undefined;
   searchQuery: string;
   locked: boolean;
+  dirty: boolean;
+  saving: boolean;
 
   // Computed-like
   activeSheet: () => Sheet | undefined;
@@ -21,7 +23,7 @@ interface VaultStore {
   setVault: (vault: Vault) => void;
   setActiveSheet: (index: number) => void;
   setSelection: (sel: GridSelection | null) => void;
-  setEditing: (editing: boolean) => void;
+  setEditing: (editing: boolean, initialChar?: string) => void;
   setSearchQuery: (query: string) => void;
   setLocked: (locked: boolean) => void;
 
@@ -41,16 +43,8 @@ interface VaultStore {
   toggleMasked: (index: number) => void;
 
   // Persistence
-  triggerSave: () => void;
+  save: () => Promise<void>;
 }
-
-const debouncedSave = debounce(async (vault: Vault) => {
-  try {
-    await saveVault(vault);
-  } catch (e) {
-    console.error("Auto-save failed:", e);
-  }
-}, 500);
 
 function generateId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -61,19 +55,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   activeSheetIndex: 0,
   selection: null,
   editing: false,
+  editInitialChar: undefined,
   searchQuery: "",
   locked: true,
+  dirty: false,
+  saving: false,
 
   activeSheet: () => {
     const { vault, activeSheetIndex } = get();
     return vault?.sheets[activeSheetIndex];
   },
 
-  setVault: (vault) => set({ vault, locked: false }),
+  setVault: (vault) => set({ vault, locked: false, dirty: false }),
   setActiveSheet: (index) =>
     set({ activeSheetIndex: index, selection: null, editing: false, searchQuery: "" }),
-  setSelection: (sel) => set({ selection: sel, editing: false }),
-  setEditing: (editing) => set({ editing }),
+  setSelection: (sel) => set({ selection: sel, editing: false, editInitialChar: undefined }),
+  setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLocked: (locked) => set({ locked, selection: null, editing: false }),
 
@@ -91,8 +88,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     }
     sheets[activeSheetIndex] = sheet;
     const updated = { ...vault, sheets, updatedAt: String(Date.now()) };
-    set({ vault: updated });
-    get().triggerSave();
+    set({ vault: updated, dirty: true });
   },
 
   clearCell: (row, col) => get().setCellValue(row, col, ""),
@@ -110,8 +106,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const sheet = { ...sheets[activeSheetIndex] };
     sheet.columnWidths = { ...sheet.columnWidths, [col]: width };
     sheets[activeSheetIndex] = sheet;
-    set({ vault: { ...vault, sheets } });
-    get().triggerSave();
+    set({ vault: { ...vault, sheets }, dirty: true });
   },
 
   setRowHeight: (row, height) => {
@@ -121,8 +116,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const sheet = { ...sheets[activeSheetIndex] };
     sheet.rowHeights = { ...sheet.rowHeights, [row]: height };
     sheets[activeSheetIndex] = sheet;
-    set({ vault: { ...vault, sheets } });
-    get().triggerSave();
+    set({ vault: { ...vault, sheets }, dirty: true });
   },
 
   addSheet: (name, color) => {
@@ -143,8 +137,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       sheets: [...vault.sheets, newSheet],
       updatedAt: String(Date.now()),
     };
-    set({ vault: updated, activeSheetIndex: updated.sheets.length - 1 });
-    get().triggerSave();
+    set({ vault: updated, activeSheetIndex: updated.sheets.length - 1, dirty: true });
   },
 
   removeSheet: (index) => {
@@ -152,8 +145,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!vault || vault.sheets.length <= 1) return;
     const sheets = vault.sheets.filter((_, i) => i !== index);
     const newIndex = activeSheetIndex >= sheets.length ? sheets.length - 1 : activeSheetIndex;
-    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, activeSheetIndex: newIndex });
-    get().triggerSave();
+    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, activeSheetIndex: newIndex, dirty: true });
   },
 
   renameSheet: (index, name) => {
@@ -161,8 +153,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!vault) return;
     const sheets = [...vault.sheets];
     sheets[index] = { ...sheets[index], name };
-    set({ vault: { ...vault, sheets } });
-    get().triggerSave();
+    set({ vault: { ...vault, sheets }, dirty: true });
   },
 
   toggleMasked: (index) => {
@@ -170,12 +161,20 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!vault) return;
     const sheets = [...vault.sheets];
     sheets[index] = { ...sheets[index], masked: !sheets[index].masked };
-    set({ vault: { ...vault, sheets } });
-    get().triggerSave();
+    set({ vault: { ...vault, sheets }, dirty: true });
   },
 
-  triggerSave: () => {
-    const { vault } = get();
-    if (vault) debouncedSave(vault);
+  save: async () => {
+    const { vault, dirty, saving } = get();
+    if (!vault || !dirty || saving) return;
+    set({ saving: true });
+    try {
+      await saveVault(vault);
+      set({ dirty: false, saving: false });
+    } catch (e) {
+      set({ saving: false });
+      console.error("Save failed:", e);
+      throw e;
+    }
   },
 }));

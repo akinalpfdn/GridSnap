@@ -4,6 +4,8 @@ mod services;
 mod tray;
 
 use std::sync::Mutex;
+use tauri::Manager;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -18,6 +20,26 @@ pub fn run() {
         ))
         .setup(|app| {
             tray::setup_tray_events(app)?;
+
+            // Register Ctrl+Shift+Space global shortcut
+            let shortcut = Shortcut::new(
+                Some(Modifiers::CONTROL | Modifiers::SHIFT),
+                Code::Space,
+            );
+            let handle = app.handle().clone();
+            app.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+                if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                    if let Some(window) = handle.get_webview_window("main") {
+                        if window.is_visible().unwrap_or(false) {
+                            let _ = window.hide();
+                        } else {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                }
+            })?;
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

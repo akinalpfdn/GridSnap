@@ -1,33 +1,56 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVaultStore } from "../../stores/vaultStore";
 import styles from "./GridCell.module.css";
 
 interface CellEditorProps {
   row: number;
   col: number;
-  style: React.CSSProperties;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  existingValue: string;
+  initialChar?: string;
 }
 
-export function CellEditor({ row, col, style }: CellEditorProps) {
+export function CellEditor({ row, col, left, top, width, height, existingValue, initialChar }: CellEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const getCellValue = useVaultStore((s) => s.getCellValue);
-  const setCellValue = useVaultStore((s) => s.setCellValue);
-  const setEditing = useVaultStore((s) => s.setEditing);
-  const setSelection = useVaultStore((s) => s.setSelection);
+  const committedRef = useRef(false);
+  const valueRef = useRef(initialChar !== undefined ? initialChar : existingValue);
 
-  const value = getCellValue(row, col);
+  const [localValue, setLocalValue] = useState(valueRef.current);
 
   useEffect(() => {
     const el = inputRef.current;
     if (el) {
       el.focus();
-      el.select();
+      if (initialChar === undefined) {
+        el.select();
+      } else {
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
     }
+  }, [initialChar]);
+
+  // Commit on unmount (handles click-away case)
+  // Reset committedRef on (re)mount to handle React StrictMode's unmount/remount cycle
+  useEffect(() => {
+    committedRef.current = false;
+    return () => {
+      if (!committedRef.current) {
+        committedRef.current = true;
+        useVaultStore.getState().setCellValue(row, col, valueRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const commit = (newValue: string) => {
-    setCellValue(row, col, newValue);
-    setEditing(false);
+  const commit = () => {
+    if (committedRef.current) return;
+    committedRef.current = true;
+    const store = useVaultStore.getState();
+    store.setCellValue(row, col, valueRef.current);
+    store.setEditing(false);
   };
 
   return (
@@ -35,7 +58,11 @@ export function CellEditor({ row, col, style }: CellEditorProps) {
       ref={inputRef}
       className={styles.cell}
       style={{
-        ...style,
+        position: "absolute",
+        left,
+        top,
+        width,
+        height,
         background: "var(--gs-bg-overlay)",
         outline: "2px solid var(--gs-accent)",
         outlineOffset: "-1px",
@@ -43,18 +70,25 @@ export function CellEditor({ row, col, style }: CellEditorProps) {
         padding: "0 6px",
         cursor: "text",
       }}
-      defaultValue={value}
-      onBlur={(e) => commit(e.target.value)}
+      value={localValue}
+      onChange={(e) => {
+        const v = e.target.value;
+        valueRef.current = v;
+        setLocalValue(v);
+      }}
+      onBlur={() => commit()}
       onKeyDown={(e) => {
         if (e.key === "Enter" && !e.shiftKey) {
-          commit(e.currentTarget.value);
-          setSelection({ row: row + 1, col });
+          e.preventDefault();
+          commit();
+          useVaultStore.getState().setSelection({ row: row + 1, col });
         } else if (e.key === "Tab") {
           e.preventDefault();
-          commit(e.currentTarget.value);
-          setSelection({ row, col: col + (e.shiftKey ? -1 : 1) });
+          commit();
+          useVaultStore.getState().setSelection({ row, col: col + (e.shiftKey ? -1 : 1) });
         } else if (e.key === "Escape") {
-          setEditing(false);
+          committedRef.current = true; // skip save on escape
+          useVaultStore.getState().setEditing(false);
         }
         e.stopPropagation();
       }}

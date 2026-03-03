@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Vault {
     pub version: u32,
     pub sheets: Vec<Sheet>,
@@ -11,6 +12,7 @@ pub struct Vault {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Sheet {
     pub id: String,
     pub name: String,
@@ -23,6 +25,7 @@ pub struct Sheet {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct VaultSettings {
     pub theme: String,
     pub hotkey: String,

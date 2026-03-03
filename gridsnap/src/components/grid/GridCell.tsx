@@ -1,15 +1,20 @@
 import { memo } from "react";
 import { useVaultStore } from "../../stores/vaultStore";
-import { useClipboard } from "../../hooks/useClipboard";
+import { writeClipboard } from "../../services/clipboardService";
 import { CellEditor } from "./CellEditor";
 import styles from "./GridCell.module.css";
 
 interface GridCellProps {
   row: number;
   col: number;
-  style: React.CSSProperties;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  value: string;
   isSelected: boolean;
   isEditing: boolean;
+  editInitialChar?: string;
   isMasked: boolean;
   isSearchHit: boolean;
 }
@@ -17,21 +22,30 @@ interface GridCellProps {
 export const GridCell = memo(function GridCell({
   row,
   col,
-  style,
+  left,
+  top,
+  width,
+  height,
+  value,
   isSelected,
   isEditing,
+  editInitialChar,
   isMasked,
   isSearchHit,
 }: GridCellProps) {
-  const getCellValue = useVaultStore((s) => s.getCellValue);
-  const setSelection = useVaultStore((s) => s.setSelection);
-  const setEditing = useVaultStore((s) => s.setEditing);
-  const { copySelected } = useClipboard();
-
-  const value = getCellValue(row, col);
-
   if (isEditing && isSelected) {
-    return <CellEditor row={row} col={col} style={style} />;
+    return (
+      <CellEditor
+        row={row}
+        col={col}
+        left={left}
+        top={top}
+        width={width}
+        height={height}
+        existingValue={value}
+        initialChar={editInitialChar}
+      />
+    );
   }
 
   const classNames = [
@@ -45,14 +59,26 @@ export const GridCell = memo(function GridCell({
 
   const displayValue = isMasked && value && !isSelected ? "●●●●" : value;
 
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await writeClipboard(value);
+    } catch {
+      try {
+        await navigator.clipboard.writeText(value);
+      } catch { /* ignore */ }
+    }
+  };
+
   return (
     <div
       className={classNames}
-      style={style}
-      onMouseDown={() => setSelection({ row, col })}
+      style={{ position: "absolute", left, top, width, height }}
+      onMouseDown={() => useVaultStore.getState().setSelection({ row, col })}
       onDoubleClick={() => {
-        setSelection({ row, col });
-        setEditing(true);
+        const store = useVaultStore.getState();
+        store.setSelection({ row, col });
+        store.setEditing(true);
       }}
       role="gridcell"
       aria-selected={isSelected}
@@ -64,10 +90,7 @@ export const GridCell = memo(function GridCell({
       {isSelected && value && (
         <button
           className={styles.copyBtn}
-          onClick={(e) => {
-            e.stopPropagation();
-            copySelected();
-          }}
+          onClick={handleCopy}
           title="Copy to clipboard"
           aria-label="Copy cell value"
         >

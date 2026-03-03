@@ -2,9 +2,16 @@ import { useVaultStore } from "../../stores/vaultStore";
 import { useSearch } from "../../hooks/useSearch";
 import styles from "./Toolbar.module.css";
 
-export function Toolbar() {
+interface ToolbarProps {
+  onSettingsClick: () => void;
+  onSave: () => void;
+}
+
+export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
   const searchQuery = useVaultStore((s) => s.searchQuery);
   const setSearchQuery = useVaultStore((s) => s.setSearchQuery);
+  const dirty = useVaultStore((s) => s.dirty);
+  const saving = useVaultStore((s) => s.saving);
   const { hitCount } = useSearch();
 
   return (
@@ -37,6 +44,35 @@ export function Toolbar() {
         )}
       </div>
       <div className={styles.spacer} />
+      <button
+        className={styles.saveBtn}
+        onClick={onSave}
+        disabled={!dirty || saving}
+        title="Save (Ctrl+S)"
+      >
+        {saving ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.spin}>
+            <path d="M21 12a9 9 0 11-6.219-8.56" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+        )}
+        {dirty && <span className={styles.dirtyDot} />}
+      </button>
+      <button
+        className={styles.settingsBtn}
+        onClick={onSettingsClick}
+        title="Settings"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+        </svg>
+      </button>
     </div>
   );
 }

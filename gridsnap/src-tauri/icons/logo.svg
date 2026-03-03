@@ -1,30 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- Background -->
-  <rect width="512" height="512" rx="108" fill="#1C1917"/>
+  <!-- Transparent background -->
 
-  <!-- Minimal 2x2 grid - just the crosshair intersection -->
-  <g stroke="#5C534B" stroke-width="3">
-    <line x1="256" y1="100" x2="256" y2="412"/>
-    <line x1="100" y1="256" x2="412" y2="256"/>
+  <!-- 2x2 grid crosshair lines - edge to edge -->
+  <g stroke="#5C534B" stroke-width="4">
+    <line x1="256" y1="28" x2="256" y2="484"/>
+    <line x1="28" y1="256" x2="484" y2="256"/>
   </g>
 
-  <!-- Four quadrant cells - subtle rounded rects -->
-  <rect x="116" y="116" width="124" height="124" rx="8" stroke="#3D3630" stroke-width="2.5" fill="none"/>
-  <rect x="272" y="116" width="124" height="124" rx="8" stroke="#3D3630" stroke-width="2.5" fill="none"/>
-  <rect x="116" y="272" width="124" height="124" rx="8" stroke="#3D3630" stroke-width="2.5" fill="none"/>
-  <rect x="272" y="272" width="124" height="124" rx="8" stroke="#3D3630" stroke-width="2.5" fill="none"/>
+  <!-- Four quadrant cells - expanded, minimal padding -->
+  <rect x="40" y="40" width="204" height="204" rx="14" stroke="#3D3630" stroke-width="3.5" fill="none"/>
+  <rect x="268" y="40" width="204" height="204" rx="14" stroke="#3D3630" stroke-width="3.5" fill="none"/>
+  <rect x="40" y="268" width="204" height="204" rx="14" stroke="#3D3630" stroke-width="3.5" fill="none"/>
+  <rect x="268" y="268" width="204" height="204" rx="14" stroke="#3D3630" stroke-width="3.5" fill="none"/>
 
-  <!-- Snap target circle at intersection -->
-  <circle cx="256" cy="256" r="28" fill="#D4915E" opacity="0.2"/>
-  <circle cx="256" cy="256" r="28" stroke="#D4915E" stroke-width="3.5" fill="none"/>
-  <circle cx="256" cy="256" r="6" fill="#D4915E"/>
+  <!-- Snap target circle at center intersection -->
+  <circle cx="256" cy="256" r="36" fill="#D4915E" opacity="0.2"/>
+  <circle cx="256" cy="256" r="36" stroke="#D4915E" stroke-width="4.5" fill="none"/>
+  <circle cx="256" cy="256" r="8" fill="#D4915E"/>
 
-  <!-- Top-right cell filled - active/selected cell indicator -->
-  <rect x="276" y="120" width="116" height="116" rx="6" fill="#D4915E" opacity="0.12"/>
+  <!-- Top-right cell highlight - selected cell -->
+  <rect x="273" y="45" width="194" height="194" rx="10" fill="#D4915E" opacity="0.12"/>
 
-  <!-- Small copy icon in top-right cell -->
-  <g transform="translate(310, 154)" stroke="#D4915E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="8" y="8" width="26" height="26" rx="3" fill="none"/>
-    <path d="M4 28H3a2.5 2.5 0 01-2.5-2.5V3A2.5 2.5 0 013 .5h22.5A2.5 2.5 0 0128 3v1" fill="none"/>
+  <!-- Copy icon in top-right cell -->
+  <g transform="translate(338, 108)" stroke="#D4915E" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="10" y="10" width="34" height="34" rx="4" fill="none"/>
+    <path d="M5 36H3.5a3.5 3.5 0 01-3.5-3.5V3.5A3.5 3.5 0 013.5 0H32a3.5 3.5 0 013.5 3.5V5" fill="none"/>
   </g>
 </svg>

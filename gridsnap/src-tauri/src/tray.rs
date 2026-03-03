@@ -1,6 +1,6 @@
 use tauri::{
     menu::{Menu, MenuItem},
-    tray::TrayIconEvent,
+    tray::{MouseButton, MouseButtonState, TrayIconEvent},
     Manager,
 };
 
@@ -30,7 +30,12 @@ pub fn setup_tray_events(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
         });
 
         tray.on_tray_icon_event(|tray, event| {
-            if let TrayIconEvent::Click { .. } = event {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("main") {
                     if window.is_visible().unwrap_or(false) {

@@ -6,6 +6,7 @@ import { useRowResize } from "../../hooks/useRowResize";
 import { useClipboard } from "../../hooks/useClipboard";
 import { useSearch } from "../../hooks/useSearch";
 import { buildPrefixSums, findStartIndex, findEndIndex, colToLetter } from "../../utils/gridMath";
+import { encodeCellKey } from "../../utils/cellKey";
 import { GridCell } from "./GridCell";
 import styles from "./VirtualGrid.module.css";
 
@@ -23,27 +24,42 @@ export function VirtualGrid() {
   const [viewportWidth, setViewportWidth] = useState(900);
   const [viewportHeight, setViewportHeight] = useState(600);
 
-  const activeSheet = useVaultStore((s) => s.activeSheet);
   const selection = useVaultStore((s) => s.selection);
   const editing = useVaultStore((s) => s.editing);
+  const editInitialChar = useVaultStore((s) => s.editInitialChar);
+  // Subscribe to specific sheet properties separately for optimal re-renders
+  const sheetData = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.data
+  );
+  const columnWidths = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.columnWidths
+  );
+  const rowHeights = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.rowHeights
+  );
+  const isMasked = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.masked ?? false
+  );
+
   const { handleKeyDown } = useGridNavigation();
   const { onMouseDown: onColResizeDown } = useColumnResize();
   const { onMouseDown: onRowResizeDown } = useRowResize();
   const { copySelected } = useClipboard();
   const { isHit } = useSearch();
 
-  const sheet = activeSheet();
-  const columnWidths = sheet?.columnWidths ?? {};
-  const rowHeights = sheet?.rowHeights ?? {};
-  const isMasked = sheet?.masked ?? false;
+  const safeColumnWidths = columnWidths ?? {};
+  const safeRowHeights = rowHeights ?? {};
+  const safeData = sheetData ?? {};
 
   // Prefix sums for positioning
   const colSums = useMemo(
-    () => buildPrefixSums(TOTAL_COLS, DEFAULT_COL_WIDTH, columnWidths),
+    () => buildPrefixSums(TOTAL_COLS, DEFAULT_COL_WIDTH, safeColumnWidths),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [columnWidths]
   );
   const rowSums = useMemo(
-    () => buildPrefixSums(TOTAL_ROWS, DEFAULT_ROW_HEIGHT, rowHeights),
+    () => buildPrefixSums(TOTAL_ROWS, DEFAULT_ROW_HEIGHT, safeRowHeights),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [rowHeights]
   );
 
@@ -55,6 +71,13 @@ export function VirtualGrid() {
   const endRow = Math.min(TOTAL_ROWS - 1, findEndIndex(rowSums, scrollTop + viewportHeight) + OVERSCAN);
   const startCol = Math.max(0, findStartIndex(colSums, scrollLeft) - OVERSCAN);
   const endCol = Math.min(TOTAL_COLS - 1, findEndIndex(colSums, scrollLeft + viewportWidth) + OVERSCAN);
+
+  // Refocus grid container when selection changes and not editing
+  useEffect(() => {
+    if (selection && !editing && containerRef.current) {
+      containerRef.current.focus();
+    }
+  }, [selection, editing]);
 
   // ResizeObserver for container
   useEffect(() => {
@@ -143,7 +166,7 @@ export function VirtualGrid() {
     );
   }
 
-  // Render cells
+  // Render cells — pass all values as primitive props so memo works
   const cells: React.ReactNode[] = [];
   for (let r = startRow; r <= endRow; r++) {
     const y = rowSums[r] + DEFAULT_ROW_HEIGHT;
@@ -152,14 +175,20 @@ export function VirtualGrid() {
       const x = colSums[c] + ROW_HEADER_WIDTH;
       const w = colSums[c + 1] - colSums[c];
       const isSelected = selection?.row === r && selection?.col === c;
+      const cellKey = encodeCellKey(r, c);
       cells.push(
         <GridCell
-          key={`${r},${c}`}
+          key={cellKey}
           row={r}
           col={c}
-          style={{ left: x, top: y, width: w, height: h }}
+          left={x}
+          top={y}
+          width={w}
+          height={h}
+          value={safeData[cellKey] ?? ""}
           isSelected={isSelected}
           isEditing={isSelected && editing}
+          editInitialChar={isSelected && editing ? editInitialChar : undefined}
           isMasked={isMasked}
           isSearchHit={isHit(r, c)}
         />
