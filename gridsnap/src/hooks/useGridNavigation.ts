@@ -6,7 +6,9 @@ const MAX_COLS = 26;
 
 export function useGridNavigation() {
   const selection = useVaultStore((s) => s.selection);
+  const selectionEnd = useVaultStore((s) => s.selectionEnd);
   const setSelection = useVaultStore((s) => s.setSelection);
+  const setSelectionEnd = useVaultStore((s) => s.setSelectionEnd);
   const editing = useVaultStore((s) => s.editing);
   const setEditing = useVaultStore((s) => s.setEditing);
 
@@ -40,22 +42,41 @@ export function useGridNavigation() {
       }
 
       // Navigation mode
+      // Determine the "cursor" position (end of range or selection)
+      const cursor = selectionEnd ?? selection;
+
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
-          setSelection({ row: Math.max(row - 1, 0), col });
+          if (e.shiftKey) {
+            setSelectionEnd({ row: Math.max((cursor.row) - 1, 0), col: cursor.col });
+          } else {
+            setSelection({ row: Math.max(row - 1, 0), col });
+          }
           break;
         case "ArrowDown":
           e.preventDefault();
-          setSelection({ row: Math.min(row + 1, MAX_ROWS - 1), col });
+          if (e.shiftKey) {
+            setSelectionEnd({ row: Math.min((cursor.row) + 1, MAX_ROWS - 1), col: cursor.col });
+          } else {
+            setSelection({ row: Math.min(row + 1, MAX_ROWS - 1), col });
+          }
           break;
         case "ArrowLeft":
           e.preventDefault();
-          setSelection({ row, col: Math.max(col - 1, 0) });
+          if (e.shiftKey) {
+            setSelectionEnd({ row: cursor.row, col: Math.max((cursor.col) - 1, 0) });
+          } else {
+            setSelection({ row, col: Math.max(col - 1, 0) });
+          }
           break;
         case "ArrowRight":
           e.preventDefault();
-          setSelection({ row, col: Math.min(col + 1, MAX_COLS - 1) });
+          if (e.shiftKey) {
+            setSelectionEnd({ row: cursor.row, col: Math.min((cursor.col) + 1, MAX_COLS - 1) });
+          } else {
+            setSelection({ row, col: Math.min(col + 1, MAX_COLS - 1) });
+          }
           break;
         case "Tab":
           e.preventDefault();
@@ -69,11 +90,16 @@ export function useGridNavigation() {
           setEditing(true);
           break;
         case "Escape":
-          setSelection(null);
+          if (selectionEnd) {
+            // First Escape clears the range, keeps anchor
+            setSelectionEnd(null);
+          } else {
+            setSelection(null);
+          }
           break;
         case "Delete":
         case "Backspace":
-          useVaultStore.getState().clearCell(row, col);
+          useVaultStore.getState().clearSelection();
           break;
         default:
           // Type-to-edit: any printable character starts editing with that char
@@ -84,7 +110,7 @@ export function useGridNavigation() {
           break;
       }
     },
-    [selection, editing, setSelection, setEditing]
+    [selection, selectionEnd, editing, setSelection, setSelectionEnd, setEditing]
   );
 
   return { handleKeyDown };

@@ -25,6 +25,10 @@
   z-index: 1;
 }
 
+.inRange {
+  background: var(--gs-accent-subtle);
+}
+
 .masked {
   color: var(--gs-text-muted);
   font-size: 14px;

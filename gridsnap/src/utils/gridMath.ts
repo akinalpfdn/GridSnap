@@ -53,6 +53,15 @@ export function findEndIndex(
 }
 
 /**
+ * Map a pixel coordinate to a cell index using prefix sums.
+ * Returns -1 if out of bounds.
+ */
+export function hitTestIndex(prefixSums: number[], pos: number): number {
+  if (pos < 0 || pos >= prefixSums[prefixSums.length - 1]) return -1;
+  return findStartIndex(prefixSums, pos);
+}
+
+/**
  * Column index to letter(s): 0->A, 25->Z, 26->AA, etc.
  */
 export function colToLetter(col: number): string {

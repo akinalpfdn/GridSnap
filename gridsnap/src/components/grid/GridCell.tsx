@@ -13,6 +13,7 @@ interface GridCellProps {
   height: number;
   value: string;
   isSelected: boolean;
+  isInRange: boolean;
   isEditing: boolean;
   editInitialChar?: string;
   isMasked: boolean;
@@ -28,6 +29,7 @@ export const GridCell = memo(function GridCell({
   height,
   value,
   isSelected,
+  isInRange,
   isEditing,
   editInitialChar,
   isMasked,
@@ -51,6 +53,7 @@ export const GridCell = memo(function GridCell({
   const classNames = [
     styles.cell,
     isSelected && styles.selected,
+    isInRange && !isSelected && styles.inRange,
     isMasked && value && styles.masked,
     isSearchHit && styles.searchHit,
   ]
@@ -74,20 +77,18 @@ export const GridCell = memo(function GridCell({
     <div
       className={classNames}
       style={{ position: "absolute", left, top, width, height }}
-      onMouseDown={() => useVaultStore.getState().setSelection({ row, col })}
       onDoubleClick={() => {
         const store = useVaultStore.getState();
         store.setSelection({ row, col });
         store.setEditing(true);
       }}
       role="gridcell"
-      aria-selected={isSelected}
-      data-selected={isSelected}
+      aria-selected={isSelected || isInRange}
     >
       <span style={{ overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
         {displayValue}
       </span>
-      {isSelected && value && (
+      {isSelected && value && !isInRange && (
         <button
           className={styles.copyBtn}
           onClick={handleCopy}

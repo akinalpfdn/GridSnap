@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Sheet, Vault } from "../types/vault";
-import type { GridSelection } from "../types/grid";
+import type { GridSelection, GridRange } from "../types/grid";
 import { encodeCellKey } from "../utils/cellKey";
 import { saveVault } from "../services/vaultService";
 
@@ -9,6 +9,7 @@ interface VaultStore {
   vault: Vault | null;
   activeSheetIndex: number;
   selection: GridSelection | null;
+  selectionEnd: GridSelection | null;
   editing: boolean;
   editInitialChar: string | undefined;
   searchQuery: string;
@@ -18,11 +19,13 @@ interface VaultStore {
 
   // Computed-like
   activeSheet: () => Sheet | undefined;
+  getSelectionRange: () => GridRange | null;
 
   // Actions
   setVault: (vault: Vault) => void;
   setActiveSheet: (index: number) => void;
   setSelection: (sel: GridSelection | null) => void;
+  setSelectionEnd: (sel: GridSelection | null) => void;
   setEditing: (editing: boolean, initialChar?: string) => void;
   setSearchQuery: (query: string) => void;
   setLocked: (locked: boolean) => void;
@@ -30,6 +33,7 @@ interface VaultStore {
   // Cell operations
   setCellValue: (row: number, col: number, value: string) => void;
   clearCell: (row: number, col: number) => void;
+  clearSelection: () => void;
   getCellValue: (row: number, col: number) => string;
 
   // Column/Row resize
@@ -54,6 +58,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   vault: null,
   activeSheetIndex: 0,
   selection: null,
+  selectionEnd: null,
   editing: false,
   editInitialChar: undefined,
   searchQuery: "",
@@ -66,13 +71,26 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     return vault?.sheets[activeSheetIndex];
   },
 
+  getSelectionRange: () => {
+    const { selection, selectionEnd } = get();
+    if (!selection) return null;
+    const end = selectionEnd ?? selection;
+    return {
+      startRow: Math.min(selection.row, end.row),
+      startCol: Math.min(selection.col, end.col),
+      endRow: Math.max(selection.row, end.row),
+      endCol: Math.max(selection.col, end.col),
+    };
+  },
+
   setVault: (vault) => set({ vault, locked: false, dirty: false }),
   setActiveSheet: (index) =>
-    set({ activeSheetIndex: index, selection: null, editing: false, searchQuery: "" }),
-  setSelection: (sel) => set({ selection: sel, editing: false, editInitialChar: undefined }),
+    set({ activeSheetIndex: index, selection: null, selectionEnd: null, editing: false, searchQuery: "" }),
+  setSelection: (sel) => set({ selection: sel, selectionEnd: null, editing: false, editInitialChar: undefined }),
+  setSelectionEnd: (sel) => set({ selectionEnd: sel }),
   setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
   setSearchQuery: (query) => set({ searchQuery: query }),
-  setLocked: (locked) => set({ locked, selection: null, editing: false }),
+  setLocked: (locked) => set({ locked, selection: null, selectionEnd: null, editing: false }),
 
   setCellValue: (row, col, value) => {
     const { vault, activeSheetIndex } = get();
@@ -92,6 +110,23 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   clearCell: (row, col) => get().setCellValue(row, col, ""),
+
+  clearSelection: () => {
+    const range = get().getSelectionRange();
+    if (!range) return;
+    const { vault, activeSheetIndex } = get();
+    if (!vault) return;
+    const sheets = [...vault.sheets];
+    const sheet = { ...sheets[activeSheetIndex] };
+    sheet.data = { ...sheet.data };
+    for (let r = range.startRow; r <= range.endRow; r++) {
+      for (let c = range.startCol; c <= range.endCol; c++) {
+        delete sheet.data[encodeCellKey(r, c)];
+      }
+    }
+    sheets[activeSheetIndex] = sheet;
+    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, dirty: true });
+  },
 
   getCellValue: (row, col) => {
     const sheet = get().activeSheet();
