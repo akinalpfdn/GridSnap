@@ -71,7 +71,8 @@
   white-space: nowrap;
 }
 
-.saveBtn {
+/* Tool buttons (save, settings) */
+.toolBtn {
   position: relative;
   width: 28px;
   height: 28px;
@@ -85,12 +86,12 @@
   -webkit-app-region: no-drag;
 }
 
-.saveBtn:hover:not(:disabled) {
+.toolBtn:hover:not(:disabled) {
   background: var(--gs-bg-surface);
   color: var(--gs-text-primary);
 }
 
-.saveBtn:disabled {
+.toolBtn:disabled {
   opacity: 0.35;
   cursor: default;
 }
@@ -113,8 +114,17 @@
   animation: spin 0.8s linear infinite;
 }
 
-.settingsBtn {
-  width: 28px;
+/* Divider between tools and window controls */
+.windowDivider {
+  width: 1px;
+  height: 16px;
+  background: var(--gs-border-subtle);
+  margin: 0 2px;
+}
+
+/* Window control buttons */
+.windowBtn {
+  width: 32px;
   height: 28px;
   display: flex;
   align-items: center;
@@ -122,15 +132,21 @@
   border-radius: var(--gs-radius-md);
   color: var(--gs-text-muted);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.12s;
   -webkit-app-region: no-drag;
 }
 
-.settingsBtn:hover {
+.windowBtn:hover {
   background: var(--gs-bg-surface);
   color: var(--gs-text-primary);
 }
 
+.closeBtn:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+/* Status bar */
 .statusBar {
   display: flex;
   align-items: center;

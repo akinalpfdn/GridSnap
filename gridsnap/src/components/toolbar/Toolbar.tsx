@@ -1,3 +1,4 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useVaultStore } from "../../stores/vaultStore";
 import { useSearch } from "../../hooks/useSearch";
 import styles from "./Toolbar.module.css";
@@ -6,6 +7,8 @@ interface ToolbarProps {
   onSettingsClick: () => void;
   onSave: () => void;
 }
+
+const appWindow = getCurrentWindow();
 
 export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
   const searchQuery = useVaultStore((s) => s.searchQuery);
@@ -45,7 +48,7 @@ export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
       </div>
       <div className={styles.spacer} />
       <button
-        className={styles.saveBtn}
+        className={styles.toolBtn}
         onClick={onSave}
         disabled={!dirty || saving}
         title="Save (Ctrl+S)"
@@ -64,13 +67,33 @@ export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
         {dirty && <span className={styles.dirtyDot} />}
       </button>
       <button
-        className={styles.settingsBtn}
+        className={styles.toolBtn}
         onClick={onSettingsClick}
         title="Settings"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" />
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+        </svg>
+      </button>
+      <div className={styles.windowDivider} />
+      <button
+        className={styles.windowBtn}
+        onClick={() => appWindow.minimize()}
+        title="Minimize"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="1.2" />
+        </svg>
+      </button>
+      <button
+        className={`${styles.windowBtn} ${styles.closeBtn}`}
+        onClick={() => appWindow.hide()}
+        title="Close to tray"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" strokeWidth="1.2" />
+          <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" strokeWidth="1.2" />
         </svg>
       </button>
     </div>
