@@ -92,6 +92,15 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH"
           rm certificate.p12
 
+      # macOS: write API key to file for notarization
+      - name: Prepare Apple API key
+        if: startsWith(matrix.platform, 'macos') && env.APPLE_API_KEY != ''
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/apple-keys"
+          echo "$APPLE_API_KEY" | base64 --decode > "$RUNNER_TEMP/apple-keys/AuthKey.p8"
+
       - name: Install frontend dependencies
         working-directory: gridsnap
         run: npm ci
@@ -102,8 +111,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # macOS signing
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          # macOS notarization
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          # macOS notarization (Tauri v2 expects APPLE_API_KEY_PATH)
+          APPLE_API_KEY_PATH: ${{ startsWith(matrix.platform, 'macos') && format('{0}/apple-keys/AuthKey.p8', runner.temp) || '' }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: npx tauri build --target ${{ matrix.target }}
