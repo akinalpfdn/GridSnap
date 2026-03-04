@@ -49,6 +49,9 @@ pub fn run() {
             commands::vault::change_password,
             commands::clipboard::write_clipboard,
             commands::clipboard::read_clipboard,
+            commands::autostart::autostart_enable,
+            commands::autostart::autostart_disable,
+            commands::autostart::autostart_is_enabled,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

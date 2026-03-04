@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useVaultStore } from "../../stores/vaultStore";
 import { changePassword } from "../../services/vaultService";
+import { enableAutostart, disableAutostart, isAutostartEnabled } from "../../services/autostartService";
 import styles from "./SettingsPanel.module.css";
 
 interface SettingsPanelProps {
@@ -12,6 +13,34 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setLocked = useVaultStore((s) => s.setLocked);
   const hasPassword = useVaultStore((s) => s.hasPassword);
   const setHasPassword = useVaultStore((s) => s.setHasPassword);
+
+  // Autostart
+  const [autostart, setAutostart] = useState(false);
+  const [autostartLoading, setAutostartLoading] = useState(true);
+
+  useEffect(() => {
+    isAutostartEnabled()
+      .then(setAutostart)
+      .catch(() => setAutostart(false))
+      .finally(() => setAutostartLoading(false));
+  }, []);
+
+  const handleAutostartToggle = async () => {
+    setAutostartLoading(true);
+    try {
+      if (autostart) {
+        await disableAutostart();
+        setAutostart(false);
+      } else {
+        await enableAutostart();
+        setAutostart(true);
+      }
+    } catch (e) {
+      console.error("Autostart toggle failed:", e);
+    } finally {
+      setAutostartLoading(false);
+    }
+  };
 
   // Password fields
   const [oldPw, setOldPw] = useState("");
@@ -114,6 +143,21 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <span className={styles.shortcutDisplay}>
               {vault?.settings.hotkey ?? "Ctrl+Shift+Space"}
             </span>
+          </div>
+        </div>
+
+        {/* Startup */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Startup</div>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Launch on system startup</span>
+            <button
+              className={`${styles.toggle} ${autostart ? styles.toggleOn : ""}`}
+              onClick={handleAutostartToggle}
+              disabled={autostartLoading}
+            >
+              <span className={styles.toggleThumb} />
+            </button>
           </div>
         </div>
 
