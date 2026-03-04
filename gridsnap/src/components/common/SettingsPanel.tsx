@@ -10,13 +10,40 @@ interface SettingsPanelProps {
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const vault = useVaultStore((s) => s.vault);
   const setLocked = useVaultStore((s) => s.setLocked);
+  const hasPassword = useVaultStore((s) => s.hasPassword);
+  const setHasPassword = useVaultStore((s) => s.setHasPassword);
 
-  // Password change
+  // Password fields
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [pwMsg, setPwMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [pwLoading, setPwLoading] = useState(false);
+
+  const handleSetPassword = async () => {
+    if (!newPw || newPw !== confirmPw) {
+      setPwMsg({ text: "Passwords don't match.", ok: false });
+      return;
+    }
+    if (newPw.length < 4) {
+      setPwMsg({ text: "Password must be at least 4 characters.", ok: false });
+      return;
+    }
+    setPwLoading(true);
+    setPwMsg(null);
+    try {
+      // old password is empty (plaintext mode)
+      await changePassword("", newPw);
+      setPwMsg({ text: "Password set. Vault is now encrypted.", ok: true });
+      setHasPassword(true);
+      setNewPw("");
+      setConfirmPw("");
+    } catch (e: unknown) {
+      setPwMsg({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setPwLoading(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     if (!newPw || newPw !== confirmPw) {
@@ -35,6 +62,25 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       setOldPw("");
       setNewPw("");
       setConfirmPw("");
+    } catch (e: unknown) {
+      setPwMsg({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  const handleRemovePassword = async () => {
+    if (!oldPw) {
+      setPwMsg({ text: "Enter your current password to remove it.", ok: false });
+      return;
+    }
+    setPwLoading(true);
+    setPwMsg(null);
+    try {
+      await changePassword(oldPw, "");
+      setPwMsg({ text: "Password removed. Vault is now unprotected.", ok: true });
+      setHasPassword(false);
+      setOldPw("");
     } catch (e: unknown) {
       setPwMsg({ text: e instanceof Error ? e.message : String(e), ok: false });
     } finally {
@@ -83,62 +129,121 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         {/* Security */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Security</div>
-          <div className={styles.field}>
-            <label className={styles.label}>Current password</label>
-            <input
-              type="password"
-              className={styles.input}
-              value={oldPw}
-              onChange={(e) => setOldPw(e.target.value)}
-              placeholder="Current password"
-              onKeyDown={(e) => e.stopPropagation()}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>New password</label>
-            <input
-              type="password"
-              className={styles.input}
-              value={newPw}
-              onChange={(e) => setNewPw(e.target.value)}
-              placeholder="New password"
-              onKeyDown={(e) => e.stopPropagation()}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Confirm new password</label>
-            <input
-              type="password"
-              className={styles.input}
-              value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
-              placeholder="Confirm new password"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleChangePassword();
-                e.stopPropagation();
-              }}
-            />
-          </div>
-          {pwMsg && (
-            <div className={`${styles.message} ${pwMsg.ok ? styles.success : styles.error}`}>
-              {pwMsg.text}
-            </div>
+
+          {!hasPassword ? (
+            <>
+              <p className={styles.hint}>
+                No password set. Vault is stored as plaintext.
+              </p>
+              <div className={styles.field}>
+                <label className={styles.label}>New password</label>
+                <input
+                  type="password"
+                  className={styles.input}
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  placeholder="New password"
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Confirm password</label>
+                <input
+                  type="password"
+                  className={styles.input}
+                  value={confirmPw}
+                  onChange={(e) => setConfirmPw(e.target.value)}
+                  placeholder="Confirm password"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSetPassword();
+                    e.stopPropagation();
+                  }}
+                />
+              </div>
+              {pwMsg && (
+                <div className={`${styles.message} ${pwMsg.ok ? styles.success : styles.error}`}>
+                  {pwMsg.text}
+                </div>
+              )}
+              <button
+                className={styles.btn}
+                onClick={handleSetPassword}
+                disabled={pwLoading}
+              >
+                {pwLoading ? "..." : "Set Password"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className={styles.field}>
+                <label className={styles.label}>Current password</label>
+                <input
+                  type="password"
+                  className={styles.input}
+                  value={oldPw}
+                  onChange={(e) => setOldPw(e.target.value)}
+                  placeholder="Current password"
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>New password</label>
+                <input
+                  type="password"
+                  className={styles.input}
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  placeholder="New password (leave empty to remove)"
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Confirm new password</label>
+                <input
+                  type="password"
+                  className={styles.input}
+                  value={confirmPw}
+                  onChange={(e) => setConfirmPw(e.target.value)}
+                  placeholder="Confirm new password"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleChangePassword();
+                    e.stopPropagation();
+                  }}
+                />
+              </div>
+              {pwMsg && (
+                <div className={`${styles.message} ${pwMsg.ok ? styles.success : styles.error}`}>
+                  {pwMsg.text}
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  className={styles.btn}
+                  onClick={handleChangePassword}
+                  disabled={pwLoading}
+                >
+                  {pwLoading ? "..." : "Change Password"}
+                </button>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={handleRemovePassword}
+                  disabled={pwLoading}
+                >
+                  Remove Password
+                </button>
+              </div>
+            </>
           )}
-          <button
-            className={styles.btn}
-            onClick={handleChangePassword}
-            disabled={pwLoading}
-          >
-            {pwLoading ? "Changing..." : "Change Password"}
-          </button>
         </div>
 
         {/* Actions */}
-        <div className={styles.section}>
-          <button className={styles.btnSecondary} onClick={handleLock}>
-            Lock Vault
-          </button>
-        </div>
+        {hasPassword && (
+          <div className={styles.section}>
+            <button className={styles.btnSecondary} onClick={handleLock}>
+              Lock Vault
+            </button>
+          </div>
+        )}
 
         <div className={styles.version}>GridSnap v0.1.0</div>
       </div>

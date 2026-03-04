@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use tauri::State;
 
 pub struct VaultState {
+    /// None = plaintext mode (no password), Some(pw) = encrypted mode
     pub password: Mutex<Option<String>>,
 }
 
@@ -15,7 +16,11 @@ pub fn load_vault(
 ) -> Result<Option<Vault>, String> {
     let result = vault_manager::load(&app, &password)?;
     if result.is_some() {
-        *state.password.lock().unwrap() = Some(password);
+        if password.is_empty() {
+            *state.password.lock().unwrap() = None;
+        } else {
+            *state.password.lock().unwrap() = Some(password);
+        }
     }
     Ok(result)
 }
@@ -27,7 +32,10 @@ pub fn save_vault(
     vault: Vault,
 ) -> Result<bool, String> {
     let pw = state.password.lock().unwrap();
-    let password = pw.as_ref().ok_or("Vault is locked")?;
+    let password = match pw.as_ref() {
+        Some(p) => p.as_str(),
+        None => "",
+    };
     vault_manager::save(&app, &vault, password)?;
     Ok(true)
 }
@@ -40,7 +48,11 @@ pub fn create_vault(
     vault: Vault,
 ) -> Result<bool, String> {
     vault_manager::save(&app, &vault, &password)?;
-    *state.password.lock().unwrap() = Some(password);
+    if password.is_empty() {
+        *state.password.lock().unwrap() = None;
+    } else {
+        *state.password.lock().unwrap() = Some(password);
+    }
     Ok(true)
 }
 
@@ -52,6 +64,10 @@ pub fn change_password(
     new_password: String,
 ) -> Result<bool, String> {
     vault_manager::change_password(&app, &old_password, &new_password)?;
-    *state.password.lock().unwrap() = Some(new_password);
+    if new_password.is_empty() {
+        *state.password.lock().unwrap() = None;
+    } else {
+        *state.password.lock().unwrap() = Some(new_password);
+    }
     Ok(true)
 }

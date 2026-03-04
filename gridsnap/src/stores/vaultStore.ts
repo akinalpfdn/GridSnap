@@ -16,6 +16,7 @@ interface VaultStore {
   locked: boolean;
   dirty: boolean;
   saving: boolean;
+  hasPassword: boolean;
 
   // Computed-like
   activeSheet: () => Sheet | undefined;
@@ -29,6 +30,7 @@ interface VaultStore {
   setEditing: (editing: boolean, initialChar?: string) => void;
   setSearchQuery: (query: string) => void;
   setLocked: (locked: boolean) => void;
+  setHasPassword: (hasPassword: boolean) => void;
 
   // Cell operations
   setCellValue: (row: number, col: number, value: string) => void;
@@ -65,6 +67,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   locked: true,
   dirty: false,
   saving: false,
+  hasPassword: false,
 
   activeSheet: () => {
     const { vault, activeSheetIndex } = get();
@@ -91,6 +94,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLocked: (locked) => set({ locked, selection: null, selectionEnd: null, editing: false }),
+  setHasPassword: (hasPassword) => set({ hasPassword }),
 
   setCellValue: (row, col, value) => {
     const { vault, activeSheetIndex } = get();
