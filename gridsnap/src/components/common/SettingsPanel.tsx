@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useVaultStore } from "../../stores/vaultStore";
 import { changePassword } from "../../services/vaultService";
 import { enableAutostart, disableAutostart, isAutostartEnabled } from "../../services/autostartService";
+import { ShortcutRecorder } from "./ShortcutRecorder";
 import styles from "./SettingsPanel.module.css";
 
 interface SettingsPanelProps {
@@ -140,9 +141,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           <div className={styles.sectionTitle}>Global Shortcut</div>
           <div className={styles.row}>
             <span className={styles.rowLabel}>Toggle window</span>
-            <span className={styles.shortcutDisplay}>
-              {vault?.settings.hotkey ?? "Ctrl+Shift+Space"}
-            </span>
+            <ShortcutRecorder />
           </div>
         </div>
 

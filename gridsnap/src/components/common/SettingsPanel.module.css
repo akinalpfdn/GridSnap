@@ -192,6 +192,35 @@
   padding: 4px 8px;
 }
 
+.recorderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.recorderHint {
+  font-size: 12px;
+  color: var(--gs-accent);
+  font-style: italic;
+}
+
+.recorderBtn {
+  font-size: 11px;
+  color: var(--gs-text-muted);
+  background: transparent;
+  border: 1px solid var(--gs-border-subtle);
+  border-radius: var(--gs-radius-sm);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.recorderBtn:hover {
+  color: var(--gs-text-primary);
+  border-color: var(--gs-border-default);
+}
+
 .toggle {
   position: relative;
   width: 36px;

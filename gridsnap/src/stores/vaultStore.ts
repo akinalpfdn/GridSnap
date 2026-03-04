@@ -42,6 +42,9 @@ interface VaultStore {
   setColumnWidth: (col: number, width: number) => void;
   setRowHeight: (row: number, height: number) => void;
 
+  // Settings
+  setHotkey: (hotkey: string) => void;
+
   // Sheet operations
   addSheet: (name: string, color: string) => void;
   removeSheet: (index: number) => void;
@@ -156,6 +159,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     sheet.rowHeights = { ...sheet.rowHeights, [row]: height };
     sheets[activeSheetIndex] = sheet;
     set({ vault: { ...vault, sheets }, dirty: true });
+  },
+
+  setHotkey: (hotkey) => {
+    const { vault } = get();
+    if (!vault) return;
+    set({ vault: { ...vault, settings: { ...vault.settings, hotkey } }, dirty: true });
   },
 
   addSheet: (name, color) => {
