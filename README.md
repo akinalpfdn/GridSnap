@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1.0-D4915E?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.0.0-D4915E?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/tauri-v2-24C8D8?style=flat-square&logo=tauri&logoColor=white" alt="Tauri v2" />
   <img src="https://img.shields.io/badge/react-18-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 18" />
   <img src="https://img.shields.io/badge/rust-secure-DEA584?style=flat-square&logo=rust&logoColor=white" alt="Rust" />
@@ -25,6 +25,14 @@
   <img src="https://img.shields.io/badge/bundle-~8.5MB-blue?style=flat-square" alt="Bundle Size" />
   <img src="https://img.shields.io/badge/RAM-~30MB-blue?style=flat-square" alt="Memory" />
   <img src="https://img.shields.io/badge/startup-<500ms-blue?style=flat-square" alt="Startup Time" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="https://img.shields.io/badge/Windows-Download-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
+  &nbsp;
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-macos-arm64.dmg"><img src="https://img.shields.io/badge/macOS-Download-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Download" /></a>
+  &nbsp;
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-Download-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux Download" /></a>
 </p>
 
 ---
@@ -95,17 +103,6 @@ GridSnap gives you a **spreadsheet-like grid** that lives in your system tray. P
 ---
 
 ## Installation
-
-### Download
-
-Grab the latest release from [**Releases**](../../releases):
-
-| Platform | File |
-|----------|------|
-| Windows (installer) | `GridSnap_x.x.x_x64-setup.exe` |
-| Windows (MSI) | `GridSnap_x.x.x_x64_en-US.msi` |
-
-> macOS and Linux builds are planned.
 
 ### Build from Source
 
