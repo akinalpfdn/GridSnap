@@ -38,6 +38,55 @@
 
 ---
 
+<p align="center">
+  <img src="assets/GridSnap.gif" width="720" alt="GridSnap Demo" />
+</p>
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="assets/easy_aceess_daily.png" width="720" alt="Grid view — store commands, credentials, and notes in a spreadsheet-like layout" />
+  <br>
+  <sub>Store commands, credentials, and notes — click any cell to copy</sub>
+</p>
+
+<table>
+<tr>
+<td align="center">
+  <img src="assets/locked_app.png" width="360" alt="Master password lock screen" /><br>
+  <sub>Optional master password to encrypt the vault</sub>
+</td>
+<td align="center">
+  <img src="assets/locked_sheet.png" width="360" alt="Per-sheet password protection" /><br>
+  <sub>Per-sheet passwords — each sheet locks independently</sub>
+</td>
+</tr>
+<tr>
+<td align="center">
+  <img src="assets/masked_cells.png" width="360" alt="Individual cell masking" /><br>
+  <sub>Mask individual cells to hide sensitive values</sub>
+</td>
+<td align="center">
+  <img src="assets/masked_sheets.png" width="360" alt="Full sheet masking" /><br>
+  <sub>Mask entire sheets — all values shown as ●●●●</sub>
+</td>
+</tr>
+<tr>
+<td align="center">
+  <img src="assets/short_cuts.png" width="360" alt="Built-in keyboard shortcuts panel" /><br>
+  <sub>Built-in help panel with keyboard shortcuts</sub>
+</td>
+<td align="center">
+  <img src="assets/themes.png" width="360" alt="11 built-in themes" /><br>
+  <sub>11 built-in themes — pick your style</sub>
+</td>
+</tr>
+</table>
+
+---
+
 ## Why GridSnap?
 
 You probably have credentials, SSH commands, connection strings, and API keys scattered across sticky notes, text files, and password managers that aren't designed for quick copy-paste workflows.

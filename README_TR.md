@@ -38,6 +38,55 @@
 
 ---
 
+<p align="center">
+  <img src="assets/GridSnap.gif" width="720" alt="GridSnap Demo" />
+</p>
+
+---
+
+## Ekran Goruntuleri
+
+<p align="center">
+  <img src="assets/easy_aceess_daily.png" width="720" alt="Grid gorunumu — komutlari, kimlik bilgilerini ve notlari tablo duzeninde saklayin" />
+  <br>
+  <sub>Komutlari, kimlik bilgilerini ve notlari saklayin — herhangi bir hucreye tiklayarak kopyalayin</sub>
+</p>
+
+<table>
+<tr>
+<td align="center">
+  <img src="assets/locked_app.png" width="360" alt="Ana sifre kilit ekrani" /><br>
+  <sub>Vault'u sifrelemek icin istege bagli ana sifre</sub>
+</td>
+<td align="center">
+  <img src="assets/locked_sheet.png" width="360" alt="Sayfa bazli sifre korumasi" /><br>
+  <sub>Sayfa bazli sifreler — her sayfa bagimsiz olarak kilitlenir</sub>
+</td>
+</tr>
+<tr>
+<td align="center">
+  <img src="assets/masked_cells.png" width="360" alt="Hucre bazli maskeleme" /><br>
+  <sub>Hassas degerleri gizlemek icin hucreleri tek tek maskeleyin</sub>
+</td>
+<td align="center">
+  <img src="assets/masked_sheets.png" width="360" alt="Tum sayfa maskeleme" /><br>
+  <sub>Tum sayfayi maskeleyin — tum degerler ●●●● olarak gosterilir</sub>
+</td>
+</tr>
+<tr>
+<td align="center">
+  <img src="assets/short_cuts.png" width="360" alt="Dahili klavye kisayollari paneli" /><br>
+  <sub>Dahili yardim paneli — klavye kisayollari</sub>
+</td>
+<td align="center">
+  <img src="assets/themes.png" width="360" alt="11 yerlesik tema" /><br>
+  <sub>11 yerlesik tema — tarzinizi secin</sub>
+</td>
+</tr>
+</table>
+
+---
+
 ## Neden GridSnap?
 
 Muhtemelen kimlik bilgileriniz, SSH komutlarınız, bağlantı stringleriniz ve API anahtarlarınız yapışkan notlar, metin dosyaları ve hızlı kopyala-yapıştır için tasarlanmamış parola yöneticileri arasında dağınık halde.
