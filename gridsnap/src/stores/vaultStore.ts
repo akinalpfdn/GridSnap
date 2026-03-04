@@ -44,6 +44,7 @@ interface VaultStore {
 
   // Settings
   setHotkey: (hotkey: string) => void;
+  setTheme: (theme: string) => void;
 
   // Sheet operations
   addSheet: (name: string, color: string) => void;
@@ -165,6 +166,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const { vault } = get();
     if (!vault) return;
     set({ vault: { ...vault, settings: { ...vault.settings, hotkey } }, dirty: true });
+  },
+
+  setTheme: (theme) => {
+    const { vault } = get();
+    if (!vault) return;
+    set({ vault: { ...vault, settings: { ...vault.settings, theme } }, dirty: true });
   },
 
   addSheet: (name, color) => {

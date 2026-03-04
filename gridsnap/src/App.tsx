@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useVaultStore } from "./stores/vaultStore";
 import { loadVault, createVault } from "./services/vaultService";
 import { changeShortcut } from "./services/shortcutService";
+import { applyTheme } from "./theme/themes";
 import { VirtualGrid } from "./components/grid/VirtualGrid";
 import { SheetTabs } from "./components/sheets/SheetTabs";
 import { Toolbar } from "./components/toolbar/Toolbar";
@@ -55,6 +56,7 @@ export default function App() {
           // Vault exists in plaintext mode — open directly
           setVault(vault);
           useVaultStore.getState().setHasPassword(false);
+          applyTheme(vault.settings.theme);
           // Re-register saved shortcut if different from default
           if (vault.settings.hotkey && vault.settings.hotkey !== "Ctrl+Shift+Space") {
             changeShortcut(vault.settings.hotkey).catch(console.error);
@@ -127,8 +129,8 @@ export default function App() {
   if (locked || needsPassword) {
     return <LockScreen onUnlocked={() => {
       setNeedsPassword(false);
-      // Re-register saved shortcut after unlock
       const v = useVaultStore.getState().vault;
+      if (v) applyTheme(v.settings.theme);
       if (v?.settings.hotkey && v.settings.hotkey !== "Ctrl+Shift+Space") {
         changeShortcut(v.settings.hotkey).catch(console.error);
       }

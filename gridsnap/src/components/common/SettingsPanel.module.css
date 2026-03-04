@@ -258,6 +258,55 @@
   transform: translateX(16px);
 }
 
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.themeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-radius: var(--gs-radius-md);
+  border: 1.5px solid transparent;
+  background: var(--gs-bg-surface);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.themeCard:hover {
+  border-color: var(--gs-border-default);
+}
+
+.themeCardActive {
+  border-color: var(--gs-accent);
+}
+
+.themeSwatches {
+  display: flex;
+  gap: 3px;
+}
+
+.themeSwatches span {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.themeName {
+  font-size: 10px;
+  color: var(--gs-text-secondary);
+  white-space: nowrap;
+}
+
+.themeCardActive .themeName {
+  color: var(--gs-accent);
+}
+
 .hint {
   font-size: 12px;
   color: var(--gs-text-muted);

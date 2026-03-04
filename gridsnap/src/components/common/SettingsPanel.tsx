@@ -3,6 +3,7 @@ import { useVaultStore } from "../../stores/vaultStore";
 import { changePassword } from "../../services/vaultService";
 import { enableAutostart, disableAutostart, isAutostartEnabled } from "../../services/autostartService";
 import { ShortcutRecorder } from "./ShortcutRecorder";
+import { THEMES, applyTheme } from "../../theme/themes";
 import styles from "./SettingsPanel.module.css";
 
 interface SettingsPanelProps {
@@ -163,9 +164,27 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         {/* Theme */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Theme</div>
-          <div className={styles.row}>
-            <span className={styles.rowLabel}>Active theme</span>
-            <span className={styles.rowValue}>{vault?.settings.theme ?? "carbon"}</span>
+          <div className={styles.themeGrid}>
+            {THEMES.map((t) => {
+              const active = (vault?.settings.theme ?? "carbon") === t.id;
+              return (
+                <button
+                  key={t.id}
+                  className={`${styles.themeCard} ${active ? styles.themeCardActive : ""}`}
+                  onClick={() => {
+                    applyTheme(t.id);
+                    useVaultStore.getState().setTheme(t.id);
+                  }}
+                >
+                  <div className={styles.themeSwatches}>
+                    <span style={{ background: t.swatches[0] }} />
+                    <span style={{ background: t.swatches[1] }} />
+                    <span style={{ background: t.swatches[2] }} />
+                  </div>
+                  <span className={styles.themeName}>{t.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
