@@ -41,9 +41,13 @@ GridSnap gives you a **spreadsheet-like grid** that lives in your system tray. P
 - Virtualized 1000×26 grid — scrolls at 60fps
 - Keyboard navigation (Arrow keys, Tab, Enter, Escape)
 - Type-to-edit: start typing to fill a cell
-- Click-to-copy with `Ctrl+C` or the inline copy button
+- **Multi-cell selection** — click & drag or Shift+Arrow to select ranges
+- Hover or click a cell to copy — inline copy button with checkmark feedback
+- `Ctrl+C` copies selection (TSV format for ranges — paste into Excel/Sheets)
+- `Ctrl+V` pastes TSV data into grid starting from selected cell
 - Column resize (50–600px), row resize (22–120px)
 - Search across all cells with instant highlighting
+- Manual save with `Ctrl+S` or toolbar button (no auto-save lag)
 
 **Sheets**
 - Multiple sheets with colored tabs
@@ -52,18 +56,25 @@ GridSnap gives you a **spreadsheet-like grid** that lives in your system tray. P
 - Right-click a tab to toggle masking
 
 **Security**
-- AES-256-GCM encryption with Argon2id key derivation
-- Master password required on launch
-- Vault file is binary — unreadable without the password
+- **Passwordless by default** — opens directly on first install, no setup required
+- Optional master password (set in Settings to encrypt vault)
+- AES-256-GCM encryption with Argon2id key derivation when password is set
 - Keys are zeroized from memory after use
 - No network access, no telemetry, no cloud
 
 **Desktop Integration**
+- **Always on top** — stays visible while you work in other apps
+- Borderless window with custom title bar
 - System tray with show/hide toggle
-- `Ctrl+Shift+Space` global hotkey (configurable)
+- Global hotkey (default `Ctrl+Shift+Space`, configurable in Settings)
 - Close button minimizes to tray — the app stays ready
-- Optional launch on startup
+- Optional launch on system startup (configurable in Settings)
 - ~8.5MB bundle, ~30MB RAM
+
+**Theming**
+- 11 built-in themes selectable from Settings
+- Carbon (default), Midnight, Ocean, Aurora, Deep Teal, Light, Velvet, Nordic, Rose, Terminal, Slate
+- Theme persists across sessions
 
 ---
 
@@ -96,15 +107,17 @@ npm run tauri build    # Production build
 
 ## Usage
 
-1. **First launch** — create a master password
-2. **Unlock** — enter your password to decrypt the vault
-3. **Navigate** — click a cell or use arrow keys
-4. **Edit** — double-click or press Enter, then type
-5. **Copy** — click the copy icon or press `Ctrl+C`
-6. **New sheet** — click `+` in the tab bar
-7. **Mask a sheet** — right-click the tab to toggle `●●●●` mode
-8. **Hide** — press `Ctrl+Shift+Space` or close the window (goes to tray)
-9. **Quit** — right-click the tray icon → Quit
+1. **First launch** — opens directly, no setup required
+2. **Navigate** — click a cell or use arrow keys
+3. **Edit** — double-click or press Enter, then type
+4. **Copy** — hover a cell and click the copy icon, or press `Ctrl+C`
+5. **Paste** — copy TSV data and press `Ctrl+V` to fill multiple cells
+6. **Save** — press `Ctrl+S` or click the save button in the toolbar
+7. **New sheet** — click `+` in the tab bar
+8. **Mask a sheet** — right-click the tab to toggle `●●●●` mode
+9. **Set password** — go to Settings to optionally encrypt the vault
+10. **Hide** — press `Ctrl+Shift+Space` or close the window (goes to tray)
+11. **Quit** — right-click the tray icon → Quit
 
 ---
 
@@ -130,14 +143,14 @@ gridsnap/
 ├── src/                    # React frontend
 │   ├── components/         # Grid, Sheets, Toolbar, LockScreen
 │   ├── hooks/              # Navigation, resize, clipboard, search
-│   ├── stores/             # Zustand (vaultStore, settingsStore)
-│   ├── services/           # Tauri IPC bridge
+│   ├── stores/             # Zustand (vaultStore)
+│   ├── services/           # Tauri IPC bridge (vault, clipboard, shortcut, autostart)
 │   ├── theme/              # CSS tokens + themes
 │   ├── types/              # TypeScript definitions
 │   └── utils/              # Grid math, cell keys, debounce
 │
 ├── src-tauri/              # Rust backend
-│   ├── src/commands/       # IPC handlers (vault, clipboard)
+│   ├── src/commands/       # IPC handlers (vault, clipboard, shortcut, autostart)
 │   ├── src/services/       # Encryption, storage, vault manager
 │   ├── src/models/         # Vault, Sheet, Settings structs
 │   └── src/tray.rs         # System tray setup
@@ -151,31 +164,36 @@ gridsnap/
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Shift+Space` | Toggle window (global) |
+| `Ctrl+Shift+Space` | Toggle window (global, configurable) |
 | `Arrow keys` | Navigate cells |
+| `Shift+Arrow` | Extend selection range |
 | `Tab` / `Shift+Tab` | Move right / left |
 | `Enter` | Edit cell / move down |
 | `Escape` | Stop editing / deselect |
-| `Ctrl+C` | Copy cell value |
-| `Delete` | Clear cell |
+| `Ctrl+C` | Copy cell value (TSV for ranges) |
+| `Ctrl+V` | Paste TSV data into grid |
+| `Ctrl+S` | Save vault |
+| `Delete` | Clear cell or selected range |
 | Any key | Type-to-edit selected cell |
 
 ---
 
 ## Theming
 
-GridSnap uses CSS custom properties for theming. The default **Carbon** theme is a warm dark theme with amber accents.
+GridSnap ships with **11 built-in themes** selectable from Settings. The default **Carbon** theme is a warm dark theme with amber accents.
 
-To create a new theme, add a CSS file in `src/theme/themes/` and define the `--theme-*` variables under a `[data-theme="your-theme"]` selector. No component changes needed.
+Available themes: Carbon, Midnight, Ocean, Aurora, Deep Teal, Light, Velvet, Nordic, Rose, Terminal, Slate.
+
+Themes use CSS custom properties (`--theme-*`). To create a custom theme, add an entry to `src/theme/themes.ts` with your color definitions — no component changes needed.
 
 ---
 
 ## Security Model
 
-- **Encryption**: AES-256-GCM (authenticated encryption)
+- **Passwordless by default** — vault is stored as plaintext JSON until a password is set
+- **Optional encryption**: Set a master password in Settings to enable AES-256-GCM encryption
 - **Key derivation**: Argon2id (64MB memory, 3 iterations, 4 parallelism)
-- **Storage format**: `[salt 16B | nonce 12B | ciphertext | tag 16B]`
-- **No plaintext** ever touches disk — the vault file is always encrypted
+- **Storage format** (encrypted): `[salt 16B | nonce 12B | ciphertext | tag 16B]`
 - **Memory safety**: Rust backend with `zeroize` for sensitive data cleanup
 - **No network**: the app makes zero outbound connections
 
