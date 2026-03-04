@@ -9,6 +9,7 @@ interface SheetTabMenuProps {
   onToggleMask: () => void;
   onSetPassword: () => void;
   onRemovePassword: () => void;
+  onRename: () => void;
   onClose: () => void;
 }
 
@@ -20,6 +21,7 @@ export function SheetTabMenu({
   onToggleMask,
   onSetPassword,
   onRemovePassword,
+  onRename,
   onClose,
 }: SheetTabMenuProps) {
   useEffect(() => {
@@ -74,6 +76,18 @@ export function SheetTabMenu({
           <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
         </svg>
         {hasPassword ? "Remove password" : "Set password"}
+      </button>
+      <button
+        className={styles.menuItem}
+        onClick={() => {
+          onRename();
+          onClose();
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+        </svg>
+        Rename
       </button>
     </div>
   );

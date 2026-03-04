@@ -51,6 +51,7 @@ interface VaultStore {
   // Sheet operations
   addSheet: (name: string, color: string) => void;
   removeSheet: (index: number) => void;
+  moveSheet: (fromIndex: number, toIndex: number) => void;
   renameSheet: (index: number, name: string) => void;
   toggleMasked: (index: number) => void;
   toggleCellMask: (mask: boolean) => void;
@@ -212,6 +213,23 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const sheets = vault.sheets.filter((_, i) => i !== index);
     const newIndex = activeSheetIndex >= sheets.length ? sheets.length - 1 : activeSheetIndex;
     set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, activeSheetIndex: newIndex, dirty: true });
+  },
+
+  moveSheet: (fromIndex, toIndex) => {
+    const { vault, activeSheetIndex } = get();
+    if (!vault || fromIndex === toIndex) return;
+    const sheets = [...vault.sheets];
+    const [moved] = sheets.splice(fromIndex, 1);
+    sheets.splice(toIndex, 0, moved);
+    let newActive = activeSheetIndex;
+    if (activeSheetIndex === fromIndex) {
+      newActive = toIndex;
+    } else if (fromIndex < activeSheetIndex && toIndex >= activeSheetIndex) {
+      newActive--;
+    } else if (fromIndex > activeSheetIndex && toIndex <= activeSheetIndex) {
+      newActive++;
+    }
+    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, activeSheetIndex: newActive, dirty: true });
   },
 
   renameSheet: (index, name) => {

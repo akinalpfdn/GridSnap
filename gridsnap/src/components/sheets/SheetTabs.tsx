@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useVaultStore } from "../../stores/vaultStore";
 import { SheetTabMenu } from "./SheetTabMenu";
 import { SheetPasswordModal } from "../common/SheetPasswordModal";
@@ -6,6 +6,7 @@ import { ConfirmDialog } from "../common/ConfirmDialog";
 import styles from "./SheetTabs.module.css";
 
 const SHEET_COLORS = ["#D4915E", "#7EBF8E", "#7BA3C9", "#C97070", "#C9B870", "#B07EC9"];
+const DRAG_THRESHOLD = 5;
 
 export function SheetTabs() {
   const vault = useVaultStore((s) => s.vault);
@@ -13,6 +14,7 @@ export function SheetTabs() {
   const setActiveSheet = useVaultStore((s) => s.setActiveSheet);
   const addSheet = useVaultStore((s) => s.addSheet);
   const removeSheet = useVaultStore((s) => s.removeSheet);
+  const moveSheet = useVaultStore((s) => s.moveSheet);
   const renameSheet = useVaultStore((s) => s.renameSheet);
   const toggleMasked = useVaultStore((s) => s.toggleMasked);
 
@@ -20,6 +22,9 @@ export function SheetTabs() {
   const [contextMenu, setContextMenu] = useState<{ index: number; x: number; y: number } | null>(null);
   const [passwordModal, setPasswordModal] = useState<{ index: number; mode: "set" | "remove" | "delete" } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
+  const [dragState, setDragState] = useState<{ index: number; startX: number; dragging: boolean } | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const tabRefs = useRef<(HTMLDivElement | null)[]>([]);
   const renameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,6 +33,46 @@ export function SheetTabs() {
       renameRef.current.select();
     }
   }, [renamingIndex]);
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!dragState) return;
+      const dx = Math.abs(e.clientX - dragState.startX);
+      if (!dragState.dragging && dx < DRAG_THRESHOLD) return;
+      if (!dragState.dragging) {
+        setDragState((prev) => prev ? { ...prev, dragging: true } : null);
+      }
+      // Find which tab the cursor is over
+      for (let i = 0; i < tabRefs.current.length; i++) {
+        const el = tabRefs.current[i];
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX < rect.right) {
+          setDragOverIndex(i);
+          return;
+        }
+      }
+    },
+    [dragState]
+  );
+
+  const handleMouseUp = useCallback(() => {
+    if (dragState?.dragging && dragOverIndex !== null && dragOverIndex !== dragState.index) {
+      moveSheet(dragState.index, dragOverIndex);
+    }
+    setDragState(null);
+    setDragOverIndex(null);
+  }, [dragState, dragOverIndex, moveSheet]);
+
+  useEffect(() => {
+    if (!dragState) return;
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragState, handleMouseMove, handleMouseUp]);
 
   if (!vault) return null;
 
@@ -52,7 +97,6 @@ export function SheetTabs() {
     if (pendingDelete === null) return;
     const sheet = vault.sheets[pendingDelete];
     if (sheet?.passwordHash) {
-      // Password-protected: ask for password after confirmation
       setPasswordModal({ index: pendingDelete, mode: "delete" });
       setPendingDelete(null);
     } else {
@@ -65,15 +109,24 @@ export function SheetTabs() {
     setPendingDelete(null);
   };
 
+  const isDragging = dragState?.dragging ?? false;
+
   return (
     <div className={styles.container}>
       {vault.sheets.map((sheet, i) => (
         <div
           key={sheet.id}
-          className={`${styles.tab} ${i === activeSheetIndex ? styles.tabActive : ""}`}
+          ref={(el) => { tabRefs.current[i] = el; }}
+          className={`${styles.tab} ${i === activeSheetIndex ? styles.tabActive : ""} ${isDragging && dragState?.index === i ? styles.dragging : ""} ${isDragging && dragOverIndex === i && dragState?.index !== i ? styles.dragOver : ""}`}
           style={{ borderTopColor: i === activeSheetIndex ? sheet.color : "transparent" }}
-          onClick={() => setActiveSheet(i)}
+          onClick={() => {
+            if (!isDragging) setActiveSheet(i);
+          }}
           onDoubleClick={() => setRenamingIndex(i)}
+          onMouseDown={(e) => {
+            if (e.button !== 0 || renamingIndex === i) return;
+            setDragState({ index: i, startX: e.clientX, dragging: false });
+          }}
           onContextMenu={(e) => {
             e.preventDefault();
             setContextMenu({ index: i, x: e.clientX, y: e.clientY });
@@ -138,6 +191,7 @@ export function SheetTabs() {
           onToggleMask={() => toggleMasked(contextMenu.index)}
           onSetPassword={() => setPasswordModal({ index: contextMenu.index, mode: "set" })}
           onRemovePassword={() => setPasswordModal({ index: contextMenu.index, mode: "remove" })}
+          onRename={() => setRenamingIndex(contextMenu.index)}
           onClose={() => setContextMenu(null)}
         />
       )}

@@ -10,6 +10,8 @@ import { StatusBar } from "./components/toolbar/StatusBar";
 import { LockScreen } from "./components/common/LockScreen";
 import { SheetPasswordModal } from "./components/common/SheetPasswordModal";
 import { SettingsPanel } from "./components/common/SettingsPanel";
+import { HelpPanel } from "./components/common/HelpPanel";
+import { SheetSwitcher } from "./components/common/SheetSwitcher";
 import { Toast } from "./components/common/Toast";
 import { listen } from "@tauri-apps/api/event";
 import type { Vault, Sheet } from "./types/vault";
@@ -58,6 +60,8 @@ export default function App() {
   const isSheetLocked = !!activeSheetPasswordHash && !sheetUnlocked;
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const [booting, setBooting] = useState(true);
   const [needsPassword, setNeedsPassword] = useState(false);
 
@@ -126,6 +130,20 @@ export default function App() {
           }
         }
       }
+      // Ctrl+1-9 → jump to sheet by index
+      if ((e.ctrlKey || e.metaKey) && e.key >= "1" && e.key <= "9") {
+        e.preventDefault();
+        const store = useVaultStore.getState();
+        const idx = parseInt(e.key) - 1;
+        if (idx < (store.vault?.sheets.length ?? 0)) {
+          store.setActiveSheet(idx);
+        }
+      }
+      // Ctrl+K → sheet switcher
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSwitcherOpen((prev) => !prev);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -166,7 +184,7 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      <Toolbar onSettingsClick={() => setSettingsOpen(true)} onSave={handleSave} />
+      <Toolbar onSettingsClick={() => setSettingsOpen(true)} onHelpClick={() => setHelpOpen(true)} onSave={handleSave} />
       <div className={styles.gridArea}>
         <VirtualGrid />
         {isSheetLocked && (
@@ -181,6 +199,8 @@ export default function App() {
       <SheetTabs />
       <StatusBar />
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
+      {switcherOpen && <SheetSwitcher onClose={() => setSwitcherOpen(false)} />}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );

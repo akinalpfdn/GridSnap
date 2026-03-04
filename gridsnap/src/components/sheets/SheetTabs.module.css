@@ -90,6 +90,14 @@
   flex-shrink: 0;
 }
 
+.dragging {
+  opacity: 0.4;
+}
+
+.dragOver {
+  border-left: 2px solid var(--gs-accent);
+}
+
 .renameInput {
   background: var(--gs-bg-overlay);
   color: var(--gs-text-primary);

@@ -1,0 +1,119 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  background: var(--gs-bg-elevated);
+  border: 1px solid var(--gs-border-default);
+  border-radius: var(--gs-radius-lg);
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gs-space-md) var(--gs-space-lg);
+  border-bottom: 1px solid var(--gs-border-subtle);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gs-text-primary);
+}
+
+.closeBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--gs-radius-sm);
+  color: var(--gs-text-muted);
+  cursor: pointer;
+}
+
+.closeBtn:hover {
+  background: var(--gs-bg-overlay);
+  color: var(--gs-text-primary);
+}
+
+.body {
+  padding: var(--gs-space-md) var(--gs-space-lg);
+}
+
+.section {
+  margin-bottom: var(--gs-space-lg, 16px);
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gs-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--gs-space-sm, 8px);
+}
+
+.shortcutList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shortcutRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.shortcutLabel {
+  font-size: 13px;
+  color: var(--gs-text-secondary);
+}
+
+.shortcutKey {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--gs-text-primary);
+  background: var(--gs-bg-base);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gs-border-subtle);
+}
+
+.tipList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tip {
+  font-size: 13px;
+  color: var(--gs-text-secondary);
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+
+.tip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gs-text-muted);
+}
