@@ -50,17 +50,23 @@ GridSnap gives you a **spreadsheet-like grid** that lives in your system tray. P
 - `Ctrl+C` copies selection (TSV format for ranges — paste into Excel/Sheets)
 - `Ctrl+V` pastes TSV data into grid starting from selected cell
 - Column resize (50–600px), row resize (22–120px)
-- Search across all cells with instant highlighting
+- Search across all cells with instant highlighting (disabled on locked sheets)
 - Manual save with `Ctrl+S` or toolbar button (no auto-save lag)
+- Built-in help panel (`?` button) — keyboard shortcuts and usage tips
 
 **Sheets**
 - Multiple sheets with colored tabs
 - Add, remove, rename with delete confirmation
-- Switch sheets with `Ctrl+Tab` / `Ctrl+Shift+Tab`
+- Drag tabs to reorder sheets
+- Switch sheets with `Ctrl+Tab` / `Ctrl+Shift+Tab`, or `Ctrl+1-9` for direct jump
+- `Ctrl+K` opens a quick-switch palette — search sheets by name
+- Right-click a tab to rename, mask, or manage password
 - **Sheet masking** — right-click a tab → Mask sheet to show all values as `●●●●`
 - **Per-cell masking** — right-click cells to mask/unmask individual cells or ranges
 - **Per-sheet passwords** — right-click a tab → Set password (AES-256-GCM + Argon2id)
 - Password-protected sheets lock on every tab switch — no session persistence
+- Search is disabled on locked sheets (prevents data leakage)
+- Deleting a password-protected sheet requires password confirmation
 - Brute force protection: 10 wrong attempts → 2-minute cooldown (persisted, survives restart)
 - Each sheet can have its own independent password
 
@@ -124,13 +130,15 @@ npm run tauri build    # Production build
 5. **Paste** — copy TSV data and press `Ctrl+V` to fill multiple cells
 6. **Save** — press `Ctrl+S` or click the save button in the toolbar
 7. **New sheet** — click `+` in the tab bar
-8. **Switch sheets** — click a tab, or `Ctrl+Tab` / `Ctrl+Shift+Tab`
-9. **Mask a sheet** — right-click the tab → Mask sheet
-10. **Mask cells** — select cells, right-click → Mask cells
-11. **Sheet password** — right-click the tab → Set password
-12. **Set master password** — go to Settings to optionally encrypt the vault
-13. **Hide** — press `Ctrl+Shift+Space` or close the window (goes to tray)
-14. **Quit** — right-click the tray icon → Quit
+8. **Switch sheets** — click a tab, `Ctrl+Tab` / `Ctrl+Shift+Tab`, `Ctrl+1-9`, or `Ctrl+K` to search
+9. **Reorder sheets** — drag tabs to rearrange
+10. **Mask a sheet** — right-click the tab → Mask sheet
+11. **Mask cells** — select cells, right-click → Mask cells
+12. **Sheet password** — right-click the tab → Set password
+13. **Set master password** — go to Settings to optionally encrypt the vault
+14. **Help** — click the `?` button in the toolbar for shortcuts and tips
+15. **Hide** — press `Ctrl+Shift+Space` or close the window (goes to tray)
+16. **Quit** — right-click the tray icon → Quit
 
 ---
 
@@ -187,6 +195,8 @@ gridsnap/
 | `Ctrl+V` | Paste TSV data into grid |
 | `Ctrl+Tab` | Next sheet |
 | `Ctrl+Shift+Tab` | Previous sheet |
+| `Ctrl+1-9` | Jump to sheet by position |
+| `Ctrl+K` | Sheet switcher palette |
 | `Ctrl+S` | Save vault |
 | `Delete` | Clear cell or selected range |
 | Any key | Type-to-edit selected cell |

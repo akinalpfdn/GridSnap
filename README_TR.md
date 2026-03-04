@@ -50,17 +50,23 @@ GridSnap size sistem trayde yaşayan **elektronik tablo benzeri bir grid** sunar
 - `Ctrl+C` seçimi kopyalar (aralıklar için TSV formatı — Excel/Sheets'e yapıştırın)
 - `Ctrl+V` TSV verisini seçili hücreden başlayarak grid'e yapıştırır
 - Sütun boyutlandırma (50–600px), satır boyutlandırma (22–120px)
-- Tüm hücrelerde anlık vurgulama ile arama
+- Tüm hücrelerde anlık vurgulama ile arama (kilitli sayfalarda devre dışı)
 - `Ctrl+S` veya araç çubuğu butonu ile manuel kaydetme (otomatik kaydetme gecikmesi yok)
+- Dahili yardım paneli (`?` butonu) — klavye kısayolları ve kullanım ipuçları
 
 **Sayfalar**
 - Renkli sekmelerle birden fazla sayfa
 - Silme onayı ile ekleme, kaldırma, yeniden adlandırma
-- `Ctrl+Tab` / `Ctrl+Shift+Tab` ile sayfa değiştirme
+- Sekmeleri sürükleyerek yeniden sıralama
+- `Ctrl+Tab` / `Ctrl+Shift+Tab` ile sayfa değiştirme, `Ctrl+1-9` ile doğrudan atlama
+- `Ctrl+K` ile hızlı sayfa arama paleti
+- Sekmeye sağ tıklayarak yeniden adlandırma, maskeleme veya şifre yönetimi
 - **Sayfa maskeleme** — sekmeye sağ tıklayın → Sayfayı maskele, tüm değerler `●●●●` olarak gösterilir
 - **Hücre bazlı maskeleme** — hücrelere sağ tıklayarak tek tek veya aralık olarak maskele/maskesini kaldır
 - **Sayfa bazlı şifre koruması** — sekmeye sağ tıklayın → Şifre belirle (AES-256-GCM + Argon2id)
 - Şifreli sayfalar her sekme değişikliğinde kilitlenir — oturum kalıcılığı yok
+- Kilitli sayfalarda arama devre dışı (veri sızıntısını önler)
+- Şifreli sayfa silmek şifre onayı gerektirir
 - Brute force koruması: 10 yanlış deneme → 2 dakika bekleme süresi (kalıcı, yeniden başlatmaya dayanır)
 - Her sayfa bağımsız bir şifreye sahip olabilir
 
@@ -124,13 +130,15 @@ npm run tauri build    # Üretim derlemesi
 5. **Yapıştırma** — TSV verisini kopyalayıp `Ctrl+V` ile birden fazla hücreyi doldurun
 6. **Kaydetme** — `Ctrl+S` tuşuna basın veya araç çubuğundaki kaydet butonuna tıklayın
 7. **Yeni sayfa** — sekme çubuğundaki `+` butonuna tıklayın
-8. **Sayfa değiştirme** — bir sekmeye tıklayın veya `Ctrl+Tab` / `Ctrl+Shift+Tab`
-9. **Sayfa maskeleme** — sekmeye sağ tıklayın → Sayfayı maskele
-10. **Hücre maskeleme** — hücreleri seçin, sağ tıklayın → Hücreleri maskele
-11. **Sayfa şifresi** — sekmeye sağ tıklayın → Şifre belirle
-12. **Ana şifre belirleme** — vault'u şifrelemek için Ayarlar'a gidin
-13. **Gizleme** — `Ctrl+Shift+Space` tuşuna basın veya pencereyi kapatın (tepsiye gider)
-14. **Çıkış** — tepsi simgesine sağ tıklayın → Çıkış
+8. **Sayfa değiştirme** — sekmeye tıklayın, `Ctrl+Tab` / `Ctrl+Shift+Tab`, `Ctrl+1-9`, veya `Ctrl+K` ile arayın
+9. **Sayfa sıralama** — sekmeleri sürükleyerek yeniden düzenleyin
+10. **Sayfa maskeleme** — sekmeye sağ tıklayın → Sayfayı maskele
+11. **Hücre maskeleme** — hücreleri seçin, sağ tıklayın → Hücreleri maskele
+12. **Sayfa şifresi** — sekmeye sağ tıklayın → Şifre belirle
+13. **Ana şifre belirleme** — vault'u şifrelemek için Ayarlar'a gidin
+14. **Yardım** — araç çubuğundaki `?` butonuna tıklayarak kısayolları ve ipuçlarını görün
+15. **Gizleme** — `Ctrl+Shift+Space` tuşuna basın veya pencereyi kapatın (tepsiye gider)
+16. **Çıkış** — tepsi simgesine sağ tıklayın → Çıkış
 
 ---
 
@@ -187,6 +195,8 @@ gridsnap/
 | `Ctrl+V` | TSV verisini grid'e yapıştır |
 | `Ctrl+Tab` | Sonraki sayfa |
 | `Ctrl+Shift+Tab` | Önceki sayfa |
+| `Ctrl+1-9` | Pozisyona göre sayfaya atla |
+| `Ctrl+K` | Sayfa arama paleti |
 | `Ctrl+S` | Vault'u kaydet |
 | `Delete` | Hücreyi veya seçili aralığı temizle |
 | Herhangi bir tuş | Seçili hücreyi yazarak düzenle |
