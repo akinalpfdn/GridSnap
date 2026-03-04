@@ -111,10 +111,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # macOS signing
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          # macOS notarization (Tauri v2 expects APPLE_API_KEY_PATH)
-          APPLE_API_KEY_PATH: ${{ startsWith(matrix.platform, 'macos') && format('{0}/apple-keys/AuthKey.p8', runner.temp) || '' }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          # macOS notarization — Tauri v2 needs all three:
+          #   APPLE_API_KEY = Key ID (e.g. 536XR6WRJN)
+          #   APPLE_API_ISSUER = Issuer UUID
+          #   APPLE_API_KEY_PATH = path to .p8 file
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_PATH: ${{ startsWith(matrix.platform, 'macos') && format('{0}/apple-keys/AuthKey.p8', runner.temp) || '' }}
         run: npx tauri build --target ${{ matrix.target }}
 
       # Upload Windows artifacts
