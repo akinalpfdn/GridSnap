@@ -5,14 +5,6 @@
 <p align="center">
   <img src="icons/logo.svg" width="120" alt="GridSnap Logo" />
 </p>
-
-<h1 align="center">GridSnap</h1>
-
-<p align="center">
-  <strong>Hassas veriler için şifreli grid tabanlı not yöneticisi.</strong><br>
-  SSH komutları, kimlik bilgileri, API anahtarları, kod parçacıkları — hepsi bir kısayol uzağınızda.
-</p>
-
 <p align="center">
   <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="https://img.shields.io/badge/Windows-İndir-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows İndir" /></a>
   &nbsp;
@@ -20,6 +12,14 @@
   &nbsp;
   <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-İndir-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux İndir" /></a>
 </p>
+<h1 align="center">GridSnap</h1>
+
+<p align="center">
+  <strong>Hassas veriler için şifreli grid tabanlı not yöneticisi.</strong><br>
+  SSH komutları, kimlik bilgileri, API anahtarları, kod parçacıkları — hepsi bir kısayol uzağınızda.
+</p>
+
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-D4915E?style=flat-square" alt="Versiyon" />

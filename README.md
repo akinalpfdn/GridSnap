@@ -6,13 +6,6 @@
   <img src="icons/logo.svg" width="120" alt="GridSnap Logo" />
 </p>
 
-<h1 align="center">GridSnap</h1>
-
-<p align="center">
-  <strong>Encrypted grid-based note manager for sensitive data.</strong><br>
-  SSH commands, credentials, API keys, code snippets — all one hotkey away.
-</p>
-
 <p align="center">
   <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="https://img.shields.io/badge/Windows-Download-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
   &nbsp;
@@ -20,6 +13,13 @@
   &nbsp;
   <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-Download-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux Download" /></a>
 </p>
+<h1 align="center">GridSnap</h1>
+
+<p align="center">
+  <strong>Encrypted grid-based note manager for sensitive data.</strong><br>
+  SSH commands, credentials, API keys, code snippets — all one hotkey away.
+</p>
+
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-D4915E?style=flat-square" alt="Version" />
