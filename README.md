@@ -6,12 +6,13 @@
   <img src="icons/logo.svg" width="120" alt="GridSnap Logo" />
 </p>
 
+<h3 align="center">Download</h3>
 <p align="center">
-  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="https://img.shields.io/badge/Windows-Download-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Download" /></a>
-  &nbsp;
-  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-macos-arm64.dmg"><img src="https://img.shields.io/badge/macOS-Download-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Download" /></a>
-  &nbsp;
-  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-Download-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux Download" /></a>
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="icons/btn-windows.svg" height="56" alt="Download for Windows" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-macos-arm64.dmg"><img src="icons/btn-macos.svg" height="56" alt="Download for macOS" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="icons/btn-linux.svg" height="56" alt="Download for Linux" /></a>
 </p>
 <h1 align="center">GridSnap</h1>
 

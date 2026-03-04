@@ -5,12 +5,13 @@
 <p align="center">
   <img src="icons/logo.svg" width="120" alt="GridSnap Logo" />
 </p>
+<h3 align="center">İndir</h3>
 <p align="center">
-  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="https://img.shields.io/badge/Windows-İndir-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Windows İndir" /></a>
-  &nbsp;
-  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-macos-arm64.dmg"><img src="https://img.shields.io/badge/macOS-İndir-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS İndir" /></a>
-  &nbsp;
-  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="https://img.shields.io/badge/Linux-İndir-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux İndir" /></a>
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-windows-x64-setup.exe"><img src="icons/btn-windows.svg" height="56" alt="Windows İndir" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-macos-arm64.dmg"><img src="icons/btn-macos.svg" height="56" alt="macOS İndir" /></a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/akinalpfdn/GridSnap/releases/latest/download/GridSnap-linux-x64.AppImage"><img src="icons/btn-linux.svg" height="56" alt="Linux İndir" /></a>
 </p>
 <h1 align="center">GridSnap</h1>
 
