@@ -20,7 +20,8 @@
         "resizable": true,
         "decorations": false,
         "center": true,
-        "visible": true
+        "visible": true,
+        "alwaysOnTop": true
       }
     ],
     "trayIcon": {

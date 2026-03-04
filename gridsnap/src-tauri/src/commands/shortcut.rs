@@ -96,6 +96,7 @@ pub fn change_shortcut(app: tauri::AppHandle, new_shortcut: String) -> Result<()
                         let _ = window.hide();
                     } else {
                         let _ = window.show();
+                        let _ = window.set_always_on_top(true);
                         let _ = window.set_focus();
                     }
                 }
