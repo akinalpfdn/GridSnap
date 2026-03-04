@@ -64,6 +64,7 @@ export const GridCell = memo(function GridCell({
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    const btn = e.currentTarget as HTMLElement;
     try {
       await writeClipboard(value);
     } catch {
@@ -71,6 +72,10 @@ export const GridCell = memo(function GridCell({
         await navigator.clipboard.writeText(value);
       } catch { /* ignore */ }
     }
+    btn.classList.remove(styles.copied);
+    void btn.offsetWidth;
+    btn.classList.add(styles.copied);
+    setTimeout(() => btn.classList.remove(styles.copied), 1500);
   };
 
   return (
@@ -88,16 +93,19 @@ export const GridCell = memo(function GridCell({
       <span style={{ overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
         {displayValue}
       </span>
-      {isSelected && value && !isInRange && (
+      {value && !isInRange && (
         <button
           className={styles.copyBtn}
           onClick={handleCopy}
           title="Copy to clipboard"
           aria-label="Copy cell value"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className={styles.iconCopy} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          </svg>
+          <svg className={styles.iconCheck} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </button>
       )}

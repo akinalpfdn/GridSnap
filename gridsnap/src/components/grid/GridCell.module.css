@@ -52,11 +52,30 @@
   border-radius: var(--gs-radius-sm);
   color: var(--gs-accent);
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s;
+}
+
+.cell:hover .copyBtn,
+.selected .copyBtn {
+  opacity: 0.7;
+  pointer-events: auto;
 }
 
 .copyBtn:hover {
   opacity: 1;
   background: var(--gs-accent-subtle);
+}
+
+/* Copied state: icon swaps to checkmark */
+.copyBtn .iconCopy { display: block; }
+.copyBtn .iconCheck { display: none; }
+
+.copied .iconCopy { display: none; }
+.copied .iconCheck { display: block; }
+
+.copied {
+  color: var(--gs-status-success);
+  opacity: 1 !important;
 }
