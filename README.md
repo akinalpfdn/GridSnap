@@ -1,4 +1,8 @@
 <p align="center">
+  <a href="README_TR.md">🇹🇷 Türkçe</a>
+</p>
+
+<p align="center">
   <img src="icons/logo.svg" width="120" alt="GridSnap Logo" />
 </p>
 
@@ -51,14 +55,20 @@ GridSnap gives you a **spreadsheet-like grid** that lives in your system tray. P
 
 **Sheets**
 - Multiple sheets with colored tabs
-- Add, remove, rename, reorder
-- **Masked sheets** — cell values show as `●●●●` until you click to edit
-- Right-click a tab to toggle masking
+- Add, remove, rename with delete confirmation
+- Switch sheets with `Ctrl+Tab` / `Ctrl+Shift+Tab`
+- **Sheet masking** — right-click a tab → Mask sheet to show all values as `●●●●`
+- **Per-cell masking** — right-click cells to mask/unmask individual cells or ranges
+- **Per-sheet passwords** — right-click a tab → Set password (AES-256-GCM + Argon2id)
+- Password-protected sheets lock on every tab switch — no session persistence
+- Brute force protection: 10 wrong attempts → 2-minute cooldown (persisted, survives restart)
+- Each sheet can have its own independent password
 
 **Security**
 - **Passwordless by default** — opens directly on first install, no setup required
 - Optional master password (set in Settings to encrypt vault)
-- AES-256-GCM encryption with Argon2id key derivation when password is set
+- Optional per-sheet passwords (independent of vault password)
+- AES-256-GCM encryption with Argon2id key derivation (64MB memory, 3 iterations)
 - Keys are zeroized from memory after use
 - No network access, no telemetry, no cloud
 
@@ -96,7 +106,7 @@ Grab the latest release from [**Releases**](../../releases):
 **Prerequisites:** [Node.js](https://nodejs.org/) 18+, [Rust](https://rustup.rs/) 1.70+
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/GridSnap.git
+git clone https://github.com/akinalpfdn/GridSnap.git
 cd GridSnap/gridsnap
 npm install
 npm run tauri dev      # Development with hot reload
@@ -114,10 +124,13 @@ npm run tauri build    # Production build
 5. **Paste** — copy TSV data and press `Ctrl+V` to fill multiple cells
 6. **Save** — press `Ctrl+S` or click the save button in the toolbar
 7. **New sheet** — click `+` in the tab bar
-8. **Mask a sheet** — right-click the tab to toggle `●●●●` mode
-9. **Set password** — go to Settings to optionally encrypt the vault
-10. **Hide** — press `Ctrl+Shift+Space` or close the window (goes to tray)
-11. **Quit** — right-click the tray icon → Quit
+8. **Switch sheets** — click a tab, or `Ctrl+Tab` / `Ctrl+Shift+Tab`
+9. **Mask a sheet** — right-click the tab → Mask sheet
+10. **Mask cells** — select cells, right-click → Mask cells
+11. **Sheet password** — right-click the tab → Set password
+12. **Set master password** — go to Settings to optionally encrypt the vault
+13. **Hide** — press `Ctrl+Shift+Space` or close the window (goes to tray)
+14. **Quit** — right-click the tray icon → Quit
 
 ---
 
@@ -144,13 +157,13 @@ gridsnap/
 │   ├── components/         # Grid, Sheets, Toolbar, LockScreen
 │   ├── hooks/              # Navigation, resize, clipboard, search
 │   ├── stores/             # Zustand (vaultStore)
-│   ├── services/           # Tauri IPC bridge (vault, clipboard, shortcut, autostart)
+│   ├── services/           # Tauri IPC bridge (vault, clipboard, shortcut, autostart, sheet password)
 │   ├── theme/              # CSS tokens + themes
 │   ├── types/              # TypeScript definitions
 │   └── utils/              # Grid math, cell keys, debounce
 │
 ├── src-tauri/              # Rust backend
-│   ├── src/commands/       # IPC handlers (vault, clipboard, shortcut, autostart)
+│   ├── src/commands/       # IPC handlers (vault, clipboard, shortcut, autostart, sheet password)
 │   ├── src/services/       # Encryption, storage, vault manager
 │   ├── src/models/         # Vault, Sheet, Settings structs
 │   └── src/tray.rs         # System tray setup
@@ -172,6 +185,8 @@ gridsnap/
 | `Escape` | Stop editing / deselect |
 | `Ctrl+C` | Copy cell value (TSV for ranges) |
 | `Ctrl+V` | Paste TSV data into grid |
+| `Ctrl+Tab` | Next sheet |
+| `Ctrl+Shift+Tab` | Previous sheet |
 | `Ctrl+S` | Save vault |
 | `Delete` | Clear cell or selected range |
 | Any key | Type-to-edit selected cell |
@@ -191,7 +206,12 @@ Themes use CSS custom properties (`--theme-*`). To create a custom theme, add an
 ## Security Model
 
 - **Passwordless by default** — vault is stored as plaintext JSON until a password is set
-- **Optional encryption**: Set a master password in Settings to enable AES-256-GCM encryption
+- **Optional vault encryption**: Set a master password in Settings to enable AES-256-GCM encryption
+- **Per-sheet passwords**: Each sheet can have its own password (independent of vault password)
+  - Encrypts a verification token with AES-256-GCM + Argon2id — no plaintext hashes stored
+  - Sheets re-lock on every tab switch (no session persistence)
+  - 10 failed attempts → 2-minute cooldown, persisted in vault (cannot bypass by restarting)
+  - Only the correct password resets the attempt counter
 - **Key derivation**: Argon2id (64MB memory, 3 iterations, 4 parallelism)
 - **Storage format** (encrypted): `[salt 16B | nonce 12B | ciphertext | tag 16B]`
 - **Memory safety**: Rust backend with `zeroize` for sensitive data cleanup

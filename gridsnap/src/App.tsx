@@ -106,12 +106,25 @@ export default function App() {
     }
   }, []);
 
-  // Ctrl+S global save
+  // Global keyboard shortcuts
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
+      }
+      // Ctrl+Tab → next sheet, Ctrl+Shift+Tab → previous sheet
+      if ((e.ctrlKey || e.metaKey) && e.key === "Tab") {
+        e.preventDefault();
+        const store = useVaultStore.getState();
+        const count = store.vault?.sheets.length ?? 0;
+        if (count > 1) {
+          if (e.shiftKey) {
+            store.setActiveSheet((store.activeSheetIndex - 1 + count) % count);
+          } else {
+            store.setActiveSheet((store.activeSheetIndex + 1) % count);
+          }
+        }
       }
     };
     window.addEventListener("keydown", onKeyDown);

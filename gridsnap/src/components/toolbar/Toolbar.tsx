@@ -1,4 +1,3 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { useVaultStore } from "../../stores/vaultStore";
 import { useSearch } from "../../hooks/useSearch";
@@ -8,8 +7,6 @@ interface ToolbarProps {
   onSettingsClick: () => void;
   onSave: () => void;
 }
-
-const appWindow = getCurrentWindow();
 
 export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
   const searchQuery = useVaultStore((s) => s.searchQuery);
@@ -79,15 +76,6 @@ export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
         </svg>
       </button>
       <div className={styles.windowDivider} />
-      <button
-        className={styles.windowBtn}
-        onClick={() => appWindow.minimize()}
-        title="Minimize"
-      >
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="1.2" />
-        </svg>
-      </button>
       <button
         className={`${styles.windowBtn} ${styles.closeBtn}`}
         onClick={() => invoke("hide_window")}
