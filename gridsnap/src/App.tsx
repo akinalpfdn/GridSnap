@@ -8,6 +8,7 @@ import { SheetTabs } from "./components/sheets/SheetTabs";
 import { Toolbar } from "./components/toolbar/Toolbar";
 import { StatusBar } from "./components/toolbar/StatusBar";
 import { LockScreen } from "./components/common/LockScreen";
+import { SheetPasswordModal } from "./components/common/SheetPasswordModal";
 import { SettingsPanel } from "./components/common/SettingsPanel";
 import { Toast } from "./components/common/Toast";
 import { listen } from "@tauri-apps/api/event";
@@ -24,6 +25,9 @@ function createDefaultVault(): Vault {
       color: "#D4915E",
       masked: false,
       maskedCells: {},
+      passwordHash: null,
+      failedAttempts: 0,
+      lockUntil: null,
       data: {},
       columnWidths: {},
       rowHeights: {},
@@ -43,6 +47,15 @@ export default function App() {
   const locked = useVaultStore((s) => s.locked);
   const setLocked = useVaultStore((s) => s.setLocked);
   const setVault = useVaultStore((s) => s.setVault);
+  const activeSheetIndex = useVaultStore((s) => s.activeSheetIndex);
+  const activeSheetPasswordHash = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.passwordHash ?? null
+  );
+  const activeSheetName = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.name ?? ""
+  );
+  const sheetUnlocked = useVaultStore((s) => s.sheetUnlocked);
+  const isSheetLocked = !!activeSheetPasswordHash && !sheetUnlocked;
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [booting, setBooting] = useState(true);
@@ -143,6 +156,14 @@ export default function App() {
       <Toolbar onSettingsClick={() => setSettingsOpen(true)} onSave={handleSave} />
       <div className={styles.gridArea}>
         <VirtualGrid />
+        {isSheetLocked && (
+          <SheetPasswordModal
+            mode="unlock"
+            sheetIndex={activeSheetIndex}
+            sheetName={activeSheetName}
+            onClose={() => {}}
+          />
+        )}
       </div>
       <SheetTabs />
       <StatusBar />

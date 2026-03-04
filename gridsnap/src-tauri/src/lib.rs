@@ -56,6 +56,8 @@ pub fn run() {
             commands::shortcut::change_shortcut,
             commands::app::quit_app,
             commands::app::hide_window,
+            commands::sheet_password::hash_sheet_password,
+            commands::sheet_password::verify_sheet_password,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

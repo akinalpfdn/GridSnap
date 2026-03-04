@@ -13,6 +13,9 @@ export interface Sheet {
   color: string;
   masked: boolean;
   maskedCells: Record<string, boolean>;
+  passwordHash: string | null;
+  failedAttempts: number;
+  lockUntil: string | null;
   data: Record<string, string>;
   columnWidths: Record<number, number>;
   rowHeights: Record<number, number>;

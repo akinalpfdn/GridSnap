@@ -47,6 +47,11 @@ export function VirtualGrid() {
   const maskedCells = useVaultStore(
     (s) => s.vault?.sheets[s.activeSheetIndex]?.maskedCells
   );
+  const sheetPasswordHash = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.passwordHash ?? null
+  );
+  const sheetUnlocked = useVaultStore((s) => s.sheetUnlocked);
+  const isSheetLocked = !!sheetPasswordHash && !sheetUnlocked;
 
   const { handleKeyDown } = useGridNavigation();
   const { onMouseDown: onColResizeDown } = useColumnResize();
@@ -108,6 +113,7 @@ export function VirtualGrid() {
 
   // Mouse drag for range selection
   const onGridMouseDown = useCallback((e: React.MouseEvent) => {
+    if (isSheetLocked) return;
     // Ignore right-click (handled by onContextMenu)
     if (e.button === 2) return;
     // Ignore if clicking on headers, resize handles, or buttons
@@ -126,10 +132,11 @@ export function VirtualGrid() {
       store.setSelection(cell);
       draggingRef.current = true;
     }
-  }, [hitTest]);
+  }, [hitTest, isSheetLocked]);
 
   // Right-click context menu for cell masking
   const onContextMenu = useCallback((e: React.MouseEvent) => {
+    if (isSheetLocked) return;
     const target = e.target as HTMLElement;
     if (target.closest(`.${styles.columnHeader}`) || target.closest(`.${styles.rowHeader}`) || target.closest(`.${styles.cornerCell}`)) return;
 
@@ -147,7 +154,7 @@ export function VirtualGrid() {
     if (sheet?.masked) return;
 
     setContextMenu({ x: e.clientX, y: e.clientY });
-  }, [hitTest]);
+  }, [hitTest, isSheetLocked]);
 
   // Close context menu on click anywhere
   useEffect(() => {
@@ -249,6 +256,7 @@ export function VirtualGrid() {
   // Keyboard shortcuts
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (isSheetLocked) return;
       if ((e.ctrlKey || e.metaKey) && e.key === "c") {
         e.preventDefault();
         copySelected();
@@ -261,7 +269,7 @@ export function VirtualGrid() {
       }
       handleKeyDown(e);
     },
-    [handleKeyDown, copySelected, pasteAtSelection]
+    [handleKeyDown, copySelected, pasteAtSelection, isSheetLocked]
   );
 
   // Render column headers
@@ -341,7 +349,7 @@ export function VirtualGrid() {
           isInRange={hasRange && isInRange}
           isEditing={isAnchor && editing}
           editInitialChar={isAnchor && editing ? editInitialChar : undefined}
-          isMasked={isMasked || (maskedCells?.[cellKey] === true)}
+          isMasked={isSheetLocked || isMasked || (maskedCells?.[cellKey] === true)}
           isSearchHit={isHit(r, c)}
         />
       );

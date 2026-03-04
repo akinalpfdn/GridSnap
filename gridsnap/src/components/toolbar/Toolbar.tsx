@@ -16,7 +16,7 @@ export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
   const setSearchQuery = useVaultStore((s) => s.setSearchQuery);
   const dirty = useVaultStore((s) => s.dirty);
   const saving = useVaultStore((s) => s.saving);
-  const { hitCount } = useSearch();
+  const { hitCount, isSheetLocked } = useSearch();
 
   return (
     <div className={styles.toolbar}>
@@ -27,10 +27,11 @@ export function Toolbar({ onSettingsClick, onSave }: ToolbarProps) {
         </svg>
         <input
           className={styles.searchInput}
-          placeholder="Search cells..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={isSheetLocked ? "Search disabled" : "Search cells..."}
+          value={isSheetLocked ? "" : searchQuery}
+          onChange={(e) => !isSheetLocked && setSearchQuery(e.target.value)}
           onKeyDown={(e) => e.stopPropagation()}
+          disabled={isSheetLocked}
         />
         {searchQuery && (
           <>

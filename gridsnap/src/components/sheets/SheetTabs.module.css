@@ -85,6 +85,11 @@
   color: var(--gs-text-muted);
 }
 
+.sheetIcon {
+  color: var(--gs-text-muted);
+  flex-shrink: 0;
+}
+
 .renameInput {
   background: var(--gs-bg-overlay);
   color: var(--gs-text-primary);

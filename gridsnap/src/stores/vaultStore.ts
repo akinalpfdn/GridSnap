@@ -17,6 +17,7 @@ interface VaultStore {
   dirty: boolean;
   saving: boolean;
   hasPassword: boolean;
+  sheetUnlocked: boolean;
 
   // Computed-like
   activeSheet: () => Sheet | undefined;
@@ -31,6 +32,7 @@ interface VaultStore {
   setSearchQuery: (query: string) => void;
   setLocked: (locked: boolean) => void;
   setHasPassword: (hasPassword: boolean) => void;
+  setSheetUnlocked: (unlocked: boolean) => void;
 
   // Cell operations
   setCellValue: (row: number, col: number, value: string) => void;
@@ -52,6 +54,8 @@ interface VaultStore {
   renameSheet: (index: number, name: string) => void;
   toggleMasked: (index: number) => void;
   toggleCellMask: (mask: boolean) => void;
+  setSheetPassword: (index: number, hash: string | null) => void;
+  setSheetFailedAttempts: (index: number, attempts: number, lockUntil: string | null) => void;
 
   // Persistence
   save: () => Promise<void>;
@@ -73,6 +77,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   dirty: false,
   saving: false,
   hasPassword: false,
+  sheetUnlocked: false,
 
   activeSheet: () => {
     const { vault, activeSheetIndex } = get();
@@ -93,13 +98,14 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 
   setVault: (vault) => set({ vault, locked: false, dirty: false }),
   setActiveSheet: (index) =>
-    set({ activeSheetIndex: index, selection: null, selectionEnd: null, editing: false, searchQuery: "" }),
+    set({ activeSheetIndex: index, selection: null, selectionEnd: null, editing: false, searchQuery: "", sheetUnlocked: false }),
   setSelection: (sel) => set({ selection: sel, selectionEnd: null, editing: false, editInitialChar: undefined }),
   setSelectionEnd: (sel) => set({ selectionEnd: sel }),
   setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLocked: (locked) => set({ locked, selection: null, selectionEnd: null, editing: false }),
   setHasPassword: (hasPassword) => set({ hasPassword }),
+  setSheetUnlocked: (unlocked) => set({ sheetUnlocked: unlocked }),
 
   setCellValue: (row, col, value) => {
     const { vault, activeSheetIndex } = get();
@@ -185,6 +191,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       color,
       masked: false,
       maskedCells: {},
+      passwordHash: null,
+      failedAttempts: 0,
+      lockUntil: null,
       data: {},
       columnWidths: {},
       rowHeights: {},
@@ -241,6 +250,27 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       }
     }
     sheets[activeSheetIndex] = { ...sheet, maskedCells };
+    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, dirty: true });
+  },
+
+  setSheetPassword: (index, hash) => {
+    const { vault } = get();
+    if (!vault) return;
+    const sheets = [...vault.sheets];
+    sheets[index] = {
+      ...sheets[index],
+      passwordHash: hash,
+      failedAttempts: 0,
+      lockUntil: null,
+    };
+    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, dirty: true });
+  },
+
+  setSheetFailedAttempts: (index, attempts, lockUntil) => {
+    const { vault } = get();
+    if (!vault) return;
+    const sheets = [...vault.sheets];
+    sheets[index] = { ...sheets[index], failedAttempts: attempts, lockUntil };
     set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, dirty: true });
   },
 

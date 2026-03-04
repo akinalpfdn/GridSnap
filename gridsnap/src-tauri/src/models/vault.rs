@@ -21,6 +21,12 @@ pub struct Sheet {
     pub masked: bool,
     #[serde(default)]
     pub masked_cells: HashMap<String, bool>,
+    #[serde(default)]
+    pub password_hash: Option<String>,
+    #[serde(default)]
+    pub failed_attempts: u32,
+    #[serde(default)]
+    pub lock_until: Option<String>,
     pub data: HashMap<String, String>,
     pub column_widths: HashMap<u32, f64>,
     pub row_heights: HashMap<u32, f64>,
@@ -56,6 +62,9 @@ impl Default for Sheet {
             color: "#D4915E".to_string(),
             masked: false,
             masked_cells: HashMap::new(),
+            password_hash: None,
+            failed_attempts: 0,
+            lock_until: None,
             data: HashMap::new(),
             column_widths: HashMap::new(),
             row_heights: HashMap::new(),
