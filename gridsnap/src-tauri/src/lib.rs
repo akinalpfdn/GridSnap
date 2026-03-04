@@ -18,6 +18,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None::<Vec<&str>>,
         ))
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             tray::setup_tray_events(app)?;
 
@@ -58,6 +59,8 @@ pub fn run() {
             commands::app::hide_window,
             commands::sheet_password::hash_sheet_password,
             commands::sheet_password::verify_sheet_password,
+            commands::backup::export_vault,
+            commands::backup::import_vault,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

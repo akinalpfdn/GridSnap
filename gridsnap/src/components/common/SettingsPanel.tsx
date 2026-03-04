@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useVaultStore } from "../../stores/vaultStore";
-import { changePassword } from "../../services/vaultService";
+import { changePassword, exportVault, importVault } from "../../services/vaultService";
 import { enableAutostart, disableAutostart, isAutostartEnabled } from "../../services/autostartService";
+import { save as saveDialog, open as openDialog } from "@tauri-apps/plugin-dialog";
 import { ShortcutRecorder } from "./ShortcutRecorder";
 import { THEMES, applyTheme } from "../../theme/themes";
 import styles from "./SettingsPanel.module.css";
@@ -122,6 +123,94 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const handleLock = () => {
     setLocked(true);
     onClose();
+  };
+
+  // Backup
+  const setVault = useVaultStore((s) => s.setVault);
+  const [backupMsg, setBackupMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [importStep, setImportStep] = useState<"idle" | "confirm" | "password">("idle");
+  const [importFilePath, setImportFilePath] = useState<string | null>(null);
+  const [importPassword, setImportPassword] = useState("");
+
+  const handleExport = async () => {
+    setBackupMsg(null);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const dest = await saveDialog({
+        defaultPath: `gridsnap-backup-${today}.gs`,
+        filters: [{ name: "GridSnap Vault", extensions: ["gs"] }],
+      });
+      if (!dest) return;
+      setBackupLoading(true);
+      await exportVault(dest);
+      setBackupMsg({ text: "Backup exported successfully.", ok: true });
+    } catch (e: unknown) {
+      setBackupMsg({ text: e instanceof Error ? e.message : String(e), ok: false });
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleImportSelect = async () => {
+    setBackupMsg(null);
+    try {
+      const selected = await openDialog({
+        filters: [{ name: "GridSnap Vault", extensions: ["gs"] }],
+        multiple: false,
+      });
+      if (!selected) return;
+      setImportFilePath(selected);
+      setImportStep("confirm");
+    } catch (e: unknown) {
+      setBackupMsg({ text: e instanceof Error ? e.message : String(e), ok: false });
+    }
+  };
+
+  const handleImportConfirm = async () => {
+    if (!importFilePath) return;
+    setImportStep("idle");
+    setBackupLoading(true);
+    setBackupMsg(null);
+    try {
+      const vault = await importVault(importFilePath, "");
+      setVault(vault);
+      setBackupMsg({ text: "Backup imported successfully.", ok: true });
+      setImportFilePath(null);
+    } catch {
+      // Likely encrypted — ask for password
+      setBackupLoading(false);
+      setImportStep("password");
+    }
+  };
+
+  const handleImportWithPassword = async () => {
+    if (!importFilePath) return;
+    setImportStep("idle");
+    setBackupLoading(true);
+    setBackupMsg(null);
+    try {
+      const vault = await importVault(importFilePath, importPassword);
+      setVault(vault);
+      setBackupMsg({ text: "Backup imported successfully.", ok: true });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("Decryption failed") || msg.includes("wrong password")) {
+        setBackupMsg({ text: "Wrong password for backup file.", ok: false });
+      } else {
+        setBackupMsg({ text: msg, ok: false });
+      }
+    } finally {
+      setBackupLoading(false);
+      setImportPassword("");
+      setImportFilePath(null);
+    }
+  };
+
+  const handleImportCancel = () => {
+    setImportStep("idle");
+    setImportFilePath(null);
+    setImportPassword("");
   };
 
   return (
@@ -292,6 +381,81 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   disabled={pwLoading}
                 >
                   Remove Password
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Backup */}
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Backup</div>
+          {importStep === "idle" && (
+            <>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={handleExport}
+                  disabled={backupLoading}
+                >
+                  {backupLoading ? "..." : "Export Backup"}
+                </button>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={handleImportSelect}
+                  disabled={backupLoading}
+                >
+                  Import Backup
+                </button>
+              </div>
+              {backupMsg && (
+                <div className={`${styles.message} ${backupMsg.ok ? styles.success : styles.error}`}>
+                  {backupMsg.text}
+                </div>
+              )}
+            </>
+          )}
+          {importStep === "confirm" && (
+            <>
+              <p className={styles.hint}>
+                This will replace all current vault data with the backup. This action cannot be undone.
+              </p>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button className={styles.btnSecondary} onClick={handleImportCancel}>
+                  Cancel
+                </button>
+                <button className={styles.btn} onClick={handleImportConfirm}>
+                  Replace & Import
+                </button>
+              </div>
+            </>
+          )}
+          {importStep === "password" && (
+            <>
+              <p className={styles.hint}>
+                This backup is encrypted. Enter the password it was created with.
+              </p>
+              <div className={styles.field}>
+                <input
+                  type="password"
+                  className={styles.input}
+                  placeholder="Backup password"
+                  value={importPassword}
+                  onChange={(e) => setImportPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleImportWithPassword();
+                    if (e.key === "Escape") handleImportCancel();
+                    e.stopPropagation();
+                  }}
+                  autoFocus
+                />
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button className={styles.btnSecondary} onClick={handleImportCancel}>
+                  Cancel
+                </button>
+                <button className={styles.btn} onClick={handleImportWithPassword}>
+                  Unlock & Import
                 </button>
               </div>
             </>

@@ -4,3 +4,4 @@ pub mod autostart;
 pub mod shortcut;
 pub mod app;
 pub mod sheet_password;
+pub mod backup;

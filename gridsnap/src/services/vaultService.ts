@@ -22,3 +22,14 @@ export async function changePassword(
 ): Promise<boolean> {
   return invoke<boolean>("change_password", { oldPassword, newPassword });
 }
+
+export async function exportVault(destPath: string): Promise<boolean> {
+  return invoke<boolean>("export_vault", { destPath });
+}
+
+export async function importVault(
+  sourcePath: string,
+  backupPassword: string
+): Promise<Vault> {
+  return invoke<Vault>("import_vault", { sourcePath, backupPassword });
+}
