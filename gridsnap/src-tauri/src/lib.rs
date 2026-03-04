@@ -16,7 +16,7 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec![]),
+            None::<Vec<&str>>,
         ))
         .setup(|app| {
             tray::setup_tray_events(app)?;
