@@ -3,3 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 export async function writeClipboard(text: string): Promise<void> {
   return invoke("write_clipboard", { text });
 }
+
+export async function readClipboard(): Promise<string> {
+  return invoke<string>("read_clipboard");
+}

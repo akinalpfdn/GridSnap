@@ -5,6 +5,7 @@ import { useColumnResize } from "../../hooks/useColumnResize";
 import { useRowResize } from "../../hooks/useRowResize";
 import { useClipboard } from "../../hooks/useClipboard";
 import { useSearch } from "../../hooks/useSearch";
+import { readClipboard } from "../../services/clipboardService";
 import { buildPrefixSums, findStartIndex, findEndIndex, colToLetter, hitTestIndex } from "../../utils/gridMath";
 import { encodeCellKey } from "../../utils/cellKey";
 import { GridCell } from "./GridCell";
@@ -176,7 +177,41 @@ export function VirtualGrid() {
     }
   }, []);
 
-  // Ctrl+C shortcut
+  // Paste TSV/plain text at current selection
+  const pasteAtSelection = useCallback(async () => {
+    const store = useVaultStore.getState();
+    if (!store.selection || store.editing) return;
+    let text: string;
+    try {
+      text = await readClipboard();
+    } catch {
+      return;
+    }
+    if (!text) return;
+    const { row, col } = store.selection;
+    const lines = text.split(/\r?\n/);
+    for (let r = 0; r < lines.length; r++) {
+      const cols = lines[r].split("\t");
+      for (let c = 0; c < cols.length; c++) {
+        const targetRow = row + r;
+        const targetCol = col + c;
+        if (targetRow < TOTAL_ROWS && targetCol < TOTAL_COLS) {
+          store.setCellValue(targetRow, targetCol, cols[c]);
+        }
+      }
+    }
+    // Select the pasted range
+    if (lines.length > 1 || (lines[0] && lines[0].includes("\t"))) {
+      const lastLine = lines[lines.length - 1];
+      const lastColCount = lastLine.split("\t").length;
+      store.setSelectionEnd({
+        row: Math.min(row + lines.length - 1, TOTAL_ROWS - 1),
+        col: Math.min(col + lastColCount - 1, TOTAL_COLS - 1),
+      });
+    }
+  }, []);
+
+  // Keyboard shortcuts
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "c") {
@@ -184,9 +219,14 @@ export function VirtualGrid() {
         copySelected();
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        e.preventDefault();
+        pasteAtSelection();
+        return;
+      }
       handleKeyDown(e);
     },
-    [handleKeyDown, copySelected]
+    [handleKeyDown, copySelected, pasteAtSelection]
   );
 
   // Render column headers

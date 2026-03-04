@@ -48,6 +48,7 @@ pub fn run() {
             commands::vault::create_vault,
             commands::vault::change_password,
             commands::clipboard::write_clipboard,
+            commands::clipboard::read_clipboard,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
