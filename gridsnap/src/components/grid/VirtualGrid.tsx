@@ -25,6 +25,7 @@ export function VirtualGrid() {
   const [viewportWidth, setViewportWidth] = useState(900);
   const [viewportHeight, setViewportHeight] = useState(600);
   const draggingRef = useRef(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const selection = useVaultStore((s) => s.selection);
   const selectionEnd = useVaultStore((s) => s.selectionEnd);
@@ -42,6 +43,9 @@ export function VirtualGrid() {
   );
   const isMasked = useVaultStore(
     (s) => s.vault?.sheets[s.activeSheetIndex]?.masked ?? false
+  );
+  const maskedCells = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.maskedCells
   );
 
   const { handleKeyDown } = useGridNavigation();
@@ -104,6 +108,8 @@ export function VirtualGrid() {
 
   // Mouse drag for range selection
   const onGridMouseDown = useCallback((e: React.MouseEvent) => {
+    // Ignore right-click (handled by onContextMenu)
+    if (e.button === 2) return;
     // Ignore if clicking on headers, resize handles, or buttons
     const target = e.target as HTMLElement;
     if (target.closest(`.${styles.columnHeader}`) || target.closest(`.${styles.rowHeader}`) || target.closest(`.${styles.cornerCell}`)) return;
@@ -121,6 +127,35 @@ export function VirtualGrid() {
       draggingRef.current = true;
     }
   }, [hitTest]);
+
+  // Right-click context menu for cell masking
+  const onContextMenu = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest(`.${styles.columnHeader}`) || target.closest(`.${styles.rowHeader}`) || target.closest(`.${styles.cornerCell}`)) return;
+
+    const cell = hitTest(e);
+    if (!cell) return;
+
+    // Select the cell if nothing selected
+    const store = useVaultStore.getState();
+    if (!store.selection) {
+      store.setSelection(cell);
+    }
+
+    // Don't show context menu on sheet-level masked sheets
+    const sheet = store.vault?.sheets[store.activeSheetIndex];
+    if (sheet?.masked) return;
+
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, [hitTest]);
+
+  // Close context menu on click anywhere
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [contextMenu]);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -306,7 +341,7 @@ export function VirtualGrid() {
           isInRange={hasRange && isInRange}
           isEditing={isAnchor && editing}
           editInitialChar={isAnchor && editing ? editInitialChar : undefined}
-          isMasked={isMasked}
+          isMasked={isMasked || (maskedCells?.[cellKey] === true)}
           isSearchHit={isHit(r, c)}
         />
       );
@@ -320,6 +355,7 @@ export function VirtualGrid() {
       onScroll={onScroll}
       onKeyDown={onKeyDown}
       onMouseDown={onGridMouseDown}
+      onContextMenu={onContextMenu}
       tabIndex={0}
       role="grid"
     >
@@ -339,6 +375,40 @@ export function VirtualGrid() {
         {rowHeaders}
         {cells}
       </div>
+      {contextMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            className={styles.contextMenuItem}
+            onClick={() => {
+              useVaultStore.getState().toggleCellMask(true);
+              setContextMenu(null);
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+            Mask cells
+          </button>
+          <button
+            className={styles.contextMenuItem}
+            onClick={() => {
+              useVaultStore.getState().toggleCellMask(false);
+              setContextMenu(null);
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 019.9-1" />
+            </svg>
+            Unmask cells
+          </button>
+        </div>
+      )}
     </div>
   );
 }

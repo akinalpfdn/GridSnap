@@ -51,6 +51,7 @@ interface VaultStore {
   removeSheet: (index: number) => void;
   renameSheet: (index: number, name: string) => void;
   toggleMasked: (index: number) => void;
+  toggleCellMask: (mask: boolean) => void;
 
   // Persistence
   save: () => Promise<void>;
@@ -183,6 +184,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       icon: "grid",
       color,
       masked: false,
+      maskedCells: {},
       data: {},
       columnWidths: {},
       rowHeights: {},
@@ -217,6 +219,29 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const sheets = [...vault.sheets];
     sheets[index] = { ...sheets[index], masked: !sheets[index].masked };
     set({ vault: { ...vault, sheets }, dirty: true });
+  },
+
+  toggleCellMask: (mask) => {
+    const range = get().getSelectionRange();
+    if (!range) return;
+    const { vault, activeSheetIndex } = get();
+    if (!vault) return;
+    const sheet = vault.sheets[activeSheetIndex];
+    if (sheet.masked) return; // sheet-level mask takes precedence
+    const sheets = [...vault.sheets];
+    const maskedCells = { ...(sheet.maskedCells ?? {}) };
+    for (let r = range.startRow; r <= range.endRow; r++) {
+      for (let c = range.startCol; c <= range.endCol; c++) {
+        const key = encodeCellKey(r, c);
+        if (mask) {
+          maskedCells[key] = true;
+        } else {
+          delete maskedCells[key];
+        }
+      }
+    }
+    sheets[activeSheetIndex] = { ...sheet, maskedCells };
+    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, dirty: true });
   },
 
   save: async () => {

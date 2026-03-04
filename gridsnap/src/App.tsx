@@ -23,6 +23,7 @@ function createDefaultVault(): Vault {
       icon: "grid",
       color: "#D4915E",
       masked: false,
+      maskedCells: {},
       data: {},
       columnWidths: {},
       rowHeights: {},

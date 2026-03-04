@@ -12,6 +12,7 @@ export interface Sheet {
   icon: string;
   color: string;
   masked: boolean;
+  maskedCells: Record<string, boolean>;
   data: Record<string, string>;
   columnWidths: Record<number, number>;
   rowHeights: Record<number, number>;

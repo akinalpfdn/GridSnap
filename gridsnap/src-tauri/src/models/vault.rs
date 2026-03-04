@@ -19,6 +19,8 @@ pub struct Sheet {
     pub icon: String,
     pub color: String,
     pub masked: bool,
+    #[serde(default)]
+    pub masked_cells: HashMap<String, bool>,
     pub data: HashMap<String, String>,
     pub column_widths: HashMap<u32, f64>,
     pub row_heights: HashMap<u32, f64>,
@@ -53,6 +55,7 @@ impl Default for Sheet {
             icon: "grid".to_string(),
             color: "#D4915E".to_string(),
             masked: false,
+            masked_cells: HashMap::new(),
             data: HashMap::new(),
             column_widths: HashMap::new(),
             row_heights: HashMap::new(),
