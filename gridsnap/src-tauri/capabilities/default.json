@@ -1,0 +1,16 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for GridSnap",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "dialog:allow-save",
+    "dialog:allow-open"
+  ]
+}

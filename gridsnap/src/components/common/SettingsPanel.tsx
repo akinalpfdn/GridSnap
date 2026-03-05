@@ -471,7 +471,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         )}
 
-        <div className={styles.version}>GridSnap v1.1.0</div>
+        <div className={styles.version}>GridSnap v1.1.1</div>
       </div>
     </div>
   );
