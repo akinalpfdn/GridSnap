@@ -5,6 +5,8 @@ mod tray;
 
 use std::sync::Mutex;
 use tauri::Manager;
+#[cfg(target_os = "macos")]
+use tauri::ActivationPolicy;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -20,6 +22,10 @@ pub fn run() {
         ))
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            // macOS: hide from dock, live only in system tray
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(ActivationPolicy::Accessory);
+
             tray::setup_tray_events(app)?;
 
             // Register Ctrl+Shift+Space global shortcut
