@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/refs/heads/dev/crates/tauri-config-schema/schema.json",
   "productName": "GridSnap",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "identifier": "com.akinalpfdn.gridsnap",
   "build": {
     "beforeDevCommand": "npm run dev",

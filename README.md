@@ -23,7 +23,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.1-D4915E?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.2.1-D4915E?style=flat-square" alt="Version" />
   <img src="https://img.shields.io/badge/tauri-v2-24C8D8?style=flat-square&logo=tauri&logoColor=white" alt="Tauri v2" />
   <img src="https://img.shields.io/badge/react-18-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React 18" />
   <img src="https://img.shields.io/badge/rust-secure-DEA584?style=flat-square&logo=rust&logoColor=white" alt="Rust" />
