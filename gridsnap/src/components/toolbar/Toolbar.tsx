@@ -1,7 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useVaultStore } from "../../stores/vaultStore";
 import { useSearch } from "../../hooks/useSearch";
 import styles from "./Toolbar.module.css";
+
+const appWindow = getCurrentWindow();
 
 interface ToolbarProps {
   onSettingsClick: () => void;
@@ -17,7 +20,7 @@ export function Toolbar({ onSettingsClick, onHelpClick, onSave }: ToolbarProps) 
   const { hitCount, isSheetLocked } = useSearch();
 
   return (
-    <div className={styles.toolbar} data-tauri-drag-region>
+    <div className={styles.toolbar} data-tauri-drag-region onMouseDown={(e) => { if (e.buttons === 1 && e.target === e.currentTarget) appWindow.startDragging(); }}>
       <div className={styles.searchBox}>
         <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8" />
@@ -46,7 +49,7 @@ export function Toolbar({ onSettingsClick, onHelpClick, onSave }: ToolbarProps) 
           </>
         )}
       </div>
-      <div className={styles.spacer} data-tauri-drag-region />
+      <div className={styles.spacer} data-tauri-drag-region onMouseDown={(e) => { if (e.buttons === 1) appWindow.startDragging(); }} />
       <button
         className={styles.toolBtn}
         onClick={onSave}
