@@ -1,7 +1,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconEvent},
-    Manager,
+    Emitter, Manager,
 };
 
 pub fn setup_tray_events(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -24,7 +24,19 @@ pub fn setup_tray_events(app: &tauri::App) -> Result<(), Box<dyn std::error::Err
                 }
             }
             "quit" => {
-                app.exit(0);
+                // Ask the frontend to persist pending changes first; it calls
+                // quit_app when done. The timer guarantees exit even if the
+                // webview can no longer answer — same outcome as before, minus
+                // the data loss in the normal case.
+                if app.emit("quit-requested", ()).is_err() {
+                    app.exit(0);
+                    return;
+                }
+                let handle = app.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                    handle.exit(0);
+                });
             }
             _ => {}
         });

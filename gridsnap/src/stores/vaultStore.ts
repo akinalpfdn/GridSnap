@@ -139,6 +139,8 @@ interface VaultStore {
 
   // Persistence
   save: () => Promise<void>;
+  /** Waits out an in-flight save, then saves if still dirty. For quit/hide paths. */
+  flushSave: (pollMs?: number) => Promise<void>;
 }
 
 function generateId(): string {
@@ -488,6 +490,20 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       set({ saving: false });
       console.error("Save failed:", e);
       throw e;
+    }
+  },
+
+  flushSave: async (pollMs = 100) => {
+    // An in-flight save is writing an older snapshot; edits made meanwhile
+    // leave dirty set, so wait for it and then persist the rest. Bounded so a
+    // wedged save cannot block a quit forever — the caller's fallback decides.
+    for (let i = 0; i < 25 && get().saving; i++) {
+      await new Promise((resolve) => setTimeout(resolve, pollMs));
+    }
+    // save() itself refuses while another write is in flight, so a wedged
+    // save simply falls through to the caller's fallback.
+    if (get().dirty) {
+      await get().save();
     }
   },
 }));

@@ -5,6 +5,7 @@ import { changeShortcut } from "./services/shortcutService";
 import { applyTheme } from "./theme/themes";
 import { useUpdateCheck } from "./hooks/useUpdateCheck";
 import { useIdleLock } from "./hooks/useIdleLock";
+import { useAutosave } from "./hooks/useAutosave";
 import { VirtualGrid } from "./components/grid/VirtualGrid";
 import { SheetTabs } from "./components/sheets/SheetTabs";
 import { Toolbar } from "./components/toolbar/Toolbar";
@@ -143,6 +144,7 @@ export default function App() {
   }, []);
 
   useIdleLock({ hasPassword, idleLockMinutes, onIdle: handleIdleLock });
+  useAutosave();
 
   // Global keyboard shortcuts
   useEffect(() => {
