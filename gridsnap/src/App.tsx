@@ -14,6 +14,7 @@ import { SheetPasswordModal } from "./components/common/SheetPasswordModal";
 import { SettingsPanel } from "./components/common/SettingsPanel";
 import { HelpPanel } from "./components/common/HelpPanel";
 import { SheetSwitcher } from "./components/common/SheetSwitcher";
+import { QuickCopy } from "./components/common/QuickCopy";
 import { UpdateDialog } from "./components/common/UpdateDialog";
 import { Toast } from "./components/common/Toast";
 import { listen } from "@tauri-apps/api/event";
@@ -65,6 +66,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [quickCopyOpen, setQuickCopyOpen] = useState(false);
   const [booting, setBooting] = useState(true);
   const [needsPassword, setNeedsPassword] = useState(false);
   const { update, skip: skipUpdate } = useUpdateCheck();
@@ -176,6 +178,11 @@ export default function App() {
         e.preventDefault();
         setSwitcherOpen((prev) => !prev);
       }
+      // Ctrl+P → quick copy palette
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        setQuickCopyOpen((prev) => !prev);
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -239,6 +246,12 @@ export default function App() {
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
       {switcherOpen && <SheetSwitcher onClose={() => setSwitcherOpen(false)} />}
+      {quickCopyOpen && (
+        <QuickCopy
+          onClose={() => setQuickCopyOpen(false)}
+          onCopied={(result) => setToast(`Copied ${result.sheetName}`)}
+        />
+      )}
       {updateDialogOpen && update && (
         <UpdateDialog
           update={update}

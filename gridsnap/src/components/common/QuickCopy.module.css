@@ -1,0 +1,114 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 14vh;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+}
+
+.panel {
+  width: min(560px, 88vw);
+  background: var(--gs-bg-surface);
+  border: 1px solid var(--gs-border-default);
+  border-radius: var(--gs-radius-lg, 8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--gs-font-mono);
+  font-size: 14px;
+  color: var(--gs-text-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--gs-border-subtle);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--gs-text-muted);
+}
+
+.list {
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.empty,
+.hintRow {
+  padding: 14px;
+  font-size: 12px;
+  color: var(--gs-text-muted);
+  text-align: center;
+}
+
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gs-space-sm, 8px);
+  padding: 8px 14px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+}
+
+.item:hover {
+  background: var(--gs-bg-elevated);
+}
+
+.itemActive {
+  background: var(--gs-accent-subtle);
+  border-left-color: var(--gs-accent);
+}
+
+.sheetName {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gs-accent);
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cellRef {
+  flex-shrink: 0;
+  font-family: var(--gs-font-mono);
+  font-size: 10px;
+  color: var(--gs-text-disabled);
+}
+
+.preview {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--gs-font-mono);
+  font-size: 12px;
+  color: var(--gs-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.previewMasked {
+  color: var(--gs-text-muted);
+  letter-spacing: 2px;
+}
+
+.footer {
+  display: flex;
+  gap: var(--gs-space-md, 12px);
+  padding: 7px 14px;
+  border-top: 1px solid var(--gs-border-subtle);
+  font-size: 11px;
+  color: var(--gs-text-muted);
+}
+
+.key {
+  font-family: var(--gs-font-mono);
+  color: var(--gs-text-secondary);
+}

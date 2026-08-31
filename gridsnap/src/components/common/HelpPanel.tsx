@@ -11,6 +11,7 @@ const SHORTCUTS = [
   { key: "Ctrl+Shift+Tab", label: "Previous sheet" },
   { key: "Ctrl+1-9", label: "Jump to sheet" },
   { key: "Ctrl+K", label: "Sheet switcher" },
+  { key: "Ctrl+P", label: "Quick copy from any sheet" },
   { key: "Arrow keys", label: "Navigate grid" },
   { key: "Enter", label: "Edit cell" },
   { key: "Ctrl+Enter", label: "New line inside a cell" },
