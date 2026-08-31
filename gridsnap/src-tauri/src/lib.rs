@@ -12,6 +12,17 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut}
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Must be registered before every other plugin: a second launch
+        // (e.g. the autostart LaunchAgent plus opening the app manually on
+        // macOS) exits immediately and reveals the running window instead of
+        // spawning a second tray icon.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_always_on_top(true);
+                let _ = window.set_focus();
+            }
+        }))
         .manage(commands::vault::VaultState {
             password: Mutex::new(None),
         })
@@ -21,6 +32,7 @@ pub fn run() {
             None::<Vec<&str>>,
         ))
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             // macOS: hide from dock, live only in system tray
             #[cfg(target_os = "macos")]
@@ -67,6 +79,9 @@ pub fn run() {
             commands::sheet_password::verify_sheet_password,
             commands::backup::export_vault,
             commands::backup::import_vault,
+            commands::update::check_for_update,
+            commands::update::skip_update,
+            commands::update::open_release_page,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {

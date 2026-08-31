@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use tauri::Manager;
 
 const VAULT_FILENAME: &str = "vault.gs";
+const UPDATE_STATE_FILENAME: &str = "update.json";
 
 /// Returns the vault file path in the app data directory.
 pub fn vault_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -13,6 +14,17 @@ pub fn vault_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     fs::create_dir_all(&app_dir)
         .map_err(|e| format!("Failed to create app data dir: {}", e))?;
     Ok(app_dir.join(VAULT_FILENAME))
+}
+
+/// Returns the update-state file path in the app data directory.
+pub fn update_state_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    fs::create_dir_all(&app_dir)
+        .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    Ok(app_dir.join(UPDATE_STATE_FILENAME))
 }
 
 /// Reads raw bytes from the vault file.

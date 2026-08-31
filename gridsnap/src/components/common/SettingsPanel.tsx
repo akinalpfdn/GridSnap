@@ -3,6 +3,7 @@ import { useVaultStore } from "../../stores/vaultStore";
 import { changePassword, exportVault, importVault } from "../../services/vaultService";
 import { enableAutostart, disableAutostart, isAutostartEnabled } from "../../services/autostartService";
 import { save as saveDialog, open as openDialog } from "@tauri-apps/plugin-dialog";
+import { getVersion } from "@tauri-apps/api/app";
 import { ShortcutRecorder } from "./ShortcutRecorder";
 import { THEMES, applyTheme } from "../../theme/themes";
 import styles from "./SettingsPanel.module.css";
@@ -124,6 +125,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     setLocked(true);
     onClose();
   };
+
+  // Version — read from the bundle so the label cannot drift from the build
+  const [appVersion, setAppVersion] = useState("");
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(console.error);
+  }, []);
 
   // Backup
   const setVault = useVaultStore((s) => s.setVault);
@@ -471,7 +478,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         )}
 
-        <div className={styles.version}>GridSnap v1.2.2</div>
+        <div className={styles.version}>GridSnap v{appVersion}</div>
       </div>
     </div>
   );

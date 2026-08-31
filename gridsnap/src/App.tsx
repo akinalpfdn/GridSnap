@@ -3,6 +3,7 @@ import { useVaultStore } from "./stores/vaultStore";
 import { loadVault, createVault } from "./services/vaultService";
 import { changeShortcut } from "./services/shortcutService";
 import { applyTheme } from "./theme/themes";
+import { useUpdateCheck } from "./hooks/useUpdateCheck";
 import { VirtualGrid } from "./components/grid/VirtualGrid";
 import { SheetTabs } from "./components/sheets/SheetTabs";
 import { Toolbar } from "./components/toolbar/Toolbar";
@@ -12,6 +13,7 @@ import { SheetPasswordModal } from "./components/common/SheetPasswordModal";
 import { SettingsPanel } from "./components/common/SettingsPanel";
 import { HelpPanel } from "./components/common/HelpPanel";
 import { SheetSwitcher } from "./components/common/SheetSwitcher";
+import { UpdateDialog } from "./components/common/UpdateDialog";
 import { Toast } from "./components/common/Toast";
 import { listen } from "@tauri-apps/api/event";
 import type { Vault, Sheet } from "./types/vault";
@@ -64,6 +66,8 @@ export default function App() {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [booting, setBooting] = useState(true);
   const [needsPassword, setNeedsPassword] = useState(false);
+  const { update, skip: skipUpdate } = useUpdateCheck();
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
 
   // On mount: try loading vault without password (plaintext mode)
   useEffect(() => {
@@ -184,7 +188,13 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      <Toolbar onSettingsClick={() => setSettingsOpen(true)} onHelpClick={() => setHelpOpen(true)} onSave={handleSave} />
+      <Toolbar
+        onSettingsClick={() => setSettingsOpen(true)}
+        onHelpClick={() => setHelpOpen(true)}
+        onSave={handleSave}
+        updateVersion={update?.latestVersion ?? null}
+        onUpdateClick={() => setUpdateDialogOpen(true)}
+      />
       <div className={styles.gridArea}>
         <VirtualGrid />
         {isSheetLocked && (
@@ -201,6 +211,16 @@ export default function App() {
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
       {switcherOpen && <SheetSwitcher onClose={() => setSwitcherOpen(false)} />}
+      {updateDialogOpen && update && (
+        <UpdateDialog
+          update={update}
+          onLater={() => setUpdateDialogOpen(false)}
+          onSkip={() => {
+            setUpdateDialogOpen(false);
+            skipUpdate();
+          }}
+        />
+      )}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );
