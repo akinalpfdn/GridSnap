@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useVaultStore } from "./stores/vaultStore";
-import { loadVault, createVault } from "./services/vaultService";
+import { loadVault, createVault, lockVault } from "./services/vaultService";
 import { changeShortcut } from "./services/shortcutService";
 import { applyTheme } from "./theme/themes";
 import { useUpdateCheck } from "./hooks/useUpdateCheck";
+import { useIdleLock } from "./hooks/useIdleLock";
 import { VirtualGrid } from "./components/grid/VirtualGrid";
 import { SheetTabs } from "./components/sheets/SheetTabs";
 import { Toolbar } from "./components/toolbar/Toolbar";
@@ -68,6 +69,8 @@ export default function App() {
   const [needsPassword, setNeedsPassword] = useState(false);
   const { update, skip: skipUpdate } = useUpdateCheck();
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const hasPassword = useVaultStore((s) => s.hasPassword);
+  const idleLockMinutes = useVaultStore((s) => s.vault?.settings.idleLockMinutes ?? 0);
 
   // On mount: try loading vault without password (plaintext mode)
   useEffect(() => {
@@ -113,6 +116,31 @@ export default function App() {
       setToast("Save failed");
     }
   }, []);
+
+  // Unsaved work must reach disk before the vault is locked: locking forgets the
+  // session password and drops the decrypted vault, and the reload on unlock
+  // would otherwise silently discard the changes. If that save fails, staying
+  // unlocked is the lesser harm — destroying data to honour a timer is not.
+  const handleIdleLock = useCallback(async () => {
+    const store = useVaultStore.getState();
+    if (store.dirty) {
+      try {
+        await store.save();
+      } catch {
+        setToast("Auto-lock postponed — save failed");
+        return;
+      }
+    }
+    try {
+      await lockVault();
+    } catch (e) {
+      console.error("Failed to clear the session password:", e);
+      return;
+    }
+    store.setLocked(true);
+  }, []);
+
+  useIdleLock({ hasPassword, idleLockMinutes, onIdle: handleIdleLock });
 
   // Global keyboard shortcuts
   useEffect(() => {

@@ -6,6 +6,7 @@ import { save as saveDialog, open as openDialog } from "@tauri-apps/plugin-dialo
 import { getVersion } from "@tauri-apps/api/app";
 import { ShortcutRecorder } from "./ShortcutRecorder";
 import { THEMES, applyTheme } from "../../theme/themes";
+import { IDLE_LOCK_OPTIONS } from "../../hooks/useIdleLock";
 import styles from "./SettingsPanel.module.css";
 
 interface SettingsPanelProps {
@@ -17,6 +18,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setLocked = useVaultStore((s) => s.setLocked);
   const hasPassword = useVaultStore((s) => s.hasPassword);
   const setHasPassword = useVaultStore((s) => s.setHasPassword);
+  const idleLockMinutes = useVaultStore((s) => s.vault?.settings.idleLockMinutes ?? 0);
+  const setIdleLockMinutes = useVaultStore((s) => s.setIdleLockMinutes);
 
   // Autostart
   const [autostart, setAutostart] = useState(false);
@@ -287,6 +290,27 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         {/* Security */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Security</div>
+
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Lock after inactivity</span>
+            <select
+              className={styles.select}
+              value={idleLockMinutes}
+              onChange={(e) => setIdleLockMinutes(Number(e.target.value))}
+              disabled={!hasPassword}
+            >
+              {IDLE_LOCK_OPTIONS.map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {minutes === 0 ? "Never" : `${minutes} min`}
+                </option>
+              ))}
+            </select>
+          </div>
+          {!hasPassword && (
+            <p className={styles.hint}>
+              Auto-lock needs a master password — there is nothing to unlock without one.
+            </p>
+          )}
 
           {!hasPassword ? (
             <>

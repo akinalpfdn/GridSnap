@@ -33,3 +33,9 @@ export async function importVault(
 ): Promise<Vault> {
   return invoke<Vault>("import_vault", { sourcePath, backupPassword });
 }
+
+/** Forgets the session password. Persist pending changes first — saving after
+ * this point fails by design. */
+export async function lockVault(): Promise<void> {
+  return invoke("lock_vault");
+}

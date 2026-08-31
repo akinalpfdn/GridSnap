@@ -320,3 +320,19 @@
   color: var(--gs-text-muted);
   padding: var(--gs-space-md) var(--gs-space-lg);
 }
+
+.select {
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: var(--gs-font-sans);
+  color: var(--gs-text-primary);
+  background: var(--gs-bg-elevated);
+  border: 1px solid var(--gs-border-default);
+  border-radius: var(--gs-radius-sm, 4px);
+  cursor: pointer;
+}
+
+.select:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

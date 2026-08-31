@@ -118,6 +118,7 @@ interface VaultStore {
 
   // Settings
   setHotkey: (hotkey: string) => void;
+  setIdleLockMinutes: (minutes: number) => void;
   setTheme: (theme: string) => void;
 
   // Sheet operations
@@ -189,12 +190,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   setSelectionEnd: (sel) => set({ selectionEnd: sel }),
   setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
   setSearchQuery: (query) => set({ searchQuery: query }),
-  // Locking drops the history too: it holds plaintext cell values in memory,
-  // which must not survive a lock any more than the decrypted vault would.
+  // Locking drops the decrypted vault and the history with it — both hold
+  // plaintext in memory. Callers must save first; a locked vault refuses to save.
   setLocked: (locked) =>
     set(
       locked
-        ? { locked, selection: null, selectionEnd: null, editing: false, undoStacks: {}, redoStacks: {} }
+        ? { locked, vault: null, selection: null, selectionEnd: null, editing: false, undoStacks: {}, redoStacks: {} }
         : { locked, selection: null, selectionEnd: null, editing: false }
     ),
   setHasPassword: (hasPassword) => set({ hasPassword }),
@@ -323,6 +324,12 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const { vault } = get();
     if (!vault) return;
     set({ vault: { ...vault, settings: { ...vault.settings, theme } }, dirty: true });
+  },
+
+  setIdleLockMinutes: (idleLockMinutes) => {
+    const { vault } = get();
+    if (!vault) return;
+    set({ vault: { ...vault, settings: { ...vault.settings, idleLockMinutes } }, dirty: true });
   },
 
   addSheet: (name, color) => {

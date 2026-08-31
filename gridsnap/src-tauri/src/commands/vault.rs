@@ -6,6 +6,10 @@ use tauri::State;
 pub struct VaultState {
     /// None = plaintext mode (no password), Some(pw) = encrypted mode
     pub password: Mutex<Option<String>>,
+    /// Set by `lock_vault`. Distinguishes "locked, password forgotten" from
+    /// plaintext mode — both have `password == None`, but writing in the first
+    /// case would silently rewrite an encrypted vault as plaintext.
+    pub locked: Mutex<bool>,
 }
 
 #[tauri::command]
@@ -21,6 +25,7 @@ pub fn load_vault(
         } else {
             *state.password.lock().unwrap() = Some(password);
         }
+        *state.locked.lock().unwrap() = false;
     }
     Ok(result)
 }
@@ -31,6 +36,9 @@ pub fn save_vault(
     state: State<'_, VaultState>,
     vault: Vault,
 ) -> Result<bool, String> {
+    if *state.locked.lock().unwrap() {
+        return Err("Vault is locked.".to_string());
+    }
     let pw = state.password.lock().unwrap();
     let password = match pw.as_ref() {
         Some(p) => p.as_str(),
@@ -70,4 +78,13 @@ pub fn change_password(
         *state.password.lock().unwrap() = Some(new_password);
     }
     Ok(true)
+}
+
+/// Forgets the session password so nothing can read or rewrite the vault until
+/// the master password is entered again. Callers must persist pending changes
+/// first — a locked vault refuses to save.
+#[tauri::command]
+pub fn lock_vault(state: State<'_, VaultState>) {
+    *state.password.lock().unwrap() = None;
+    *state.locked.lock().unwrap() = true;
 }

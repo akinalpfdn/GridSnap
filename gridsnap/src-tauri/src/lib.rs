@@ -25,6 +25,7 @@ pub fn run() {
         }))
         .manage(commands::vault::VaultState {
             password: Mutex::new(None),
+            locked: Mutex::new(false),
         })
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
@@ -67,6 +68,7 @@ pub fn run() {
             commands::vault::save_vault,
             commands::vault::create_vault,
             commands::vault::change_password,
+            commands::vault::lock_vault,
             commands::clipboard::write_clipboard,
             commands::clipboard::read_clipboard,
             commands::autostart::autostart_enable,
