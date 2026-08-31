@@ -33,12 +33,20 @@ export function useClipboard() {
 
     if (!text) return false;
 
+    const singleCell = range.startRow === range.endRow && range.startCol === range.endCol;
+    const markCopied = () => {
+      if (singleCell) {
+        store.recordCopy(store.activeSheetIndex, range.startRow, range.startCol);
+      }
+    };
     try {
       await writeClipboard(text);
+      markCopied();
       return true;
     } catch {
       try {
         await navigator.clipboard.writeText(text);
+        markCopied();
         return true;
       } catch {
         return false;

@@ -4,6 +4,14 @@ export interface Vault {
   settings: VaultSettings;
   createdAt: string;
   updatedAt: string;
+  /** Cells recently copied, newest first. Optional: older vaults lack it. */
+  recentCopies?: RecentCopy[];
+}
+
+export interface RecentCopy {
+  sheetId: string;
+  row: number;
+  col: number;
 }
 
 export interface Sheet {
@@ -26,6 +34,7 @@ export interface VaultSettings {
   hotkey: string;
   idleLockMinutes: number;
   autoSaveDebounceMs: number;
+  openPaletteOnSummon?: boolean;
 }
 
 export type CellKey = `${number},${number}`;

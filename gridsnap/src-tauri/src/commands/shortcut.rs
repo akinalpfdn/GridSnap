@@ -1,4 +1,4 @@
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 fn parse_shortcut(s: &str) -> Result<Shortcut, String> {
@@ -98,6 +98,7 @@ pub fn change_shortcut(app: tauri::AppHandle, new_shortcut: String) -> Result<()
                         let _ = window.show();
                         let _ = window.set_always_on_top(true);
                         let _ = window.set_focus();
+                        let _ = handle.emit("hotkey-summoned", ());
                     }
                 }
             }

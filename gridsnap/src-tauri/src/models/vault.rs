@@ -9,6 +9,18 @@ pub struct Vault {
     pub settings: VaultSettings,
     pub created_at: String,
     pub updated_at: String,
+    /// Cells recently copied, newest first — feeds the quick-copy palette.
+    /// Kept in the vault so usage patterns are encrypted with everything else.
+    #[serde(default)]
+    pub recent_copies: Vec<RecentCopy>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RecentCopy {
+    pub sheet_id: String,
+    pub row: u32,
+    pub col: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -39,6 +51,8 @@ pub struct VaultSettings {
     pub hotkey: String,
     pub idle_lock_minutes: u32,
     pub auto_save_debounce_ms: u32,
+    #[serde(default)]
+    pub open_palette_on_summon: bool,
 }
 
 impl Default for Vault {
@@ -49,6 +63,7 @@ impl Default for Vault {
             settings: VaultSettings::default(),
             created_at: chrono_now(),
             updated_at: chrono_now(),
+            recent_copies: Vec::new(),
         }
     }
 }
@@ -79,6 +94,7 @@ impl Default for VaultSettings {
             hotkey: "Ctrl+Shift+Space".to_string(),
             idle_lock_minutes: 5,
             auto_save_debounce_ms: 500,
+            open_palette_on_summon: false,
         }
     }
 }

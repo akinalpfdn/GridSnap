@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useVaultStore } from "../../stores/vaultStore";
 import { writeClipboard } from "../../services/clipboardService";
 import { previewOf, rankResults, type QuickCopyResult } from "../../utils/quickCopy";
+import { resolveRecents } from "../../utils/recents";
 import { colToLetter } from "../../utils/gridMath";
 import styles from "./QuickCopy.module.css";
 
@@ -24,8 +25,12 @@ export function QuickCopy({ onClose, onCopied }: QuickCopyProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // An empty palette is not empty-handed: it offers what was copied recently.
   const results = useMemo(
-    () => rankResults({ vault, query, activeSheetIndex, activeSheetUnlocked: sheetUnlocked }),
+    () =>
+      query.trim()
+        ? rankResults({ vault, query, activeSheetIndex, activeSheetUnlocked: sheetUnlocked })
+        : resolveRecents({ vault, activeSheetIndex, activeSheetUnlocked: sheetUnlocked }),
     [vault, query, activeSheetIndex, sheetUnlocked]
   );
 
@@ -53,6 +58,7 @@ export function QuickCopy({ onClose, onCopied }: QuickCopyProps) {
           return;
         }
       }
+      useVaultStore.getState().recordCopy(result.sheetIndex, result.row, result.col);
       onCopied(result);
       onClose();
       // Getting out of the way is the point: the value is already in hand.
@@ -93,10 +99,12 @@ export function QuickCopy({ onClose, onCopied }: QuickCopyProps) {
           onKeyDown={handleKeyDown}
         />
         <div className={styles.list} ref={listRef}>
-          {!query ? (
-            <div className={styles.hintRow}>Start typing to search every unlocked sheet</div>
-          ) : results.length === 0 ? (
-            <div className={styles.empty}>No matching cells</div>
+          {results.length === 0 ? (
+            <div className={styles.hintRow}>
+              {query.trim()
+                ? "No matching cells"
+                : "Start typing to search every unlocked sheet"}
+            </div>
           ) : (
             results.map((result, i) => (
               <div

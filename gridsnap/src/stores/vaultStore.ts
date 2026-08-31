@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Sheet, Vault } from "../types/vault";
+import { pushRecent } from "../utils/recents";
 import type { GridSelection, GridRange } from "../types/grid";
 import { encodeCellKey, decodeCellKey } from "../utils/cellKey";
 import { saveVault } from "../services/vaultService";
@@ -125,6 +126,9 @@ interface VaultStore {
   // Settings
   setHotkey: (hotkey: string) => void;
   setIdleLockMinutes: (minutes: number) => void;
+  setOpenPaletteOnSummon: (value: boolean) => void;
+  /** Remembers a successful single-cell copy for the palette recents list. */
+  recordCopy: (sheetIndex: number, row: number, col: number) => void;
   setTheme: (theme: string) => void;
 
   // Sheet operations
@@ -352,6 +356,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     const { vault } = get();
     if (!vault) return;
     set({ vault: { ...vault, settings: { ...vault.settings, idleLockMinutes } }, dirty: true });
+  },
+
+  setOpenPaletteOnSummon: (openPaletteOnSummon) => {
+    const { vault } = get();
+    if (!vault) return;
+    set({ vault: { ...vault, settings: { ...vault.settings, openPaletteOnSummon } }, dirty: true });
+  },
+
+  recordCopy: (sheetIndex, row, col) => {
+    const { vault } = get();
+    const sheet = vault?.sheets[sheetIndex];
+    if (!vault || !sheet) return;
+    const recentCopies = pushRecent(vault.recentCopies ?? [], { sheetId: sheet.id, row, col });
+    // Marks the vault dirty on purpose: the list is worth surviving a restart,
+    // and the event-driven autosave makes the cost invisible.
+    set({ vault: { ...vault, recentCopies }, dirty: true });
   },
 
   addSheet: (name, color) => {

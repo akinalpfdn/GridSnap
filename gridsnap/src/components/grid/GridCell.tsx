@@ -80,8 +80,12 @@ export const GridCell = memo(function GridCell({
     } catch {
       try {
         await navigator.clipboard.writeText(value);
-      } catch { /* ignore */ }
+      } catch {
+        return; // nothing was copied — no feedback, no recents entry
+      }
     }
+    const store = useVaultStore.getState();
+    store.recordCopy(store.activeSheetIndex, row, col);
     btn.classList.remove(styles.copied);
     void btn.offsetWidth;
     btn.classList.add(styles.copied);

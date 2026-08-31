@@ -200,6 +200,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const unlisten = listen("hotkey-summoned", () => {
+      const store = useVaultStore.getState();
+      if (store.locked || !store.vault) return;
+      if (store.vault.settings.openPaletteOnSummon) {
+        setQuickCopyOpen(true);
+      }
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
     const unlisten = listen("vault-locked", () => {
       setLocked(true);
     });
