@@ -6,6 +6,8 @@ import { applyTheme } from "./theme/themes";
 import { useUpdateCheck } from "./hooks/useUpdateCheck";
 import { useIdleLock } from "./hooks/useIdleLock";
 import { useAutosave } from "./hooks/useAutosave";
+import { shouldHideOnEscape } from "./utils/escapeChain";
+import { invoke } from "@tauri-apps/api/core";
 import { VirtualGrid } from "./components/grid/VirtualGrid";
 import { SheetTabs } from "./components/sheets/SheetTabs";
 import { Toolbar } from "./components/toolbar/Toolbar";
@@ -210,6 +212,29 @@ export default function App() {
     return () => {
       unlisten.then((fn) => fn());
     };
+  }, []);
+
+  // Escape with nothing to dismiss hides the window, like any summoned popup.
+  // Capture phase: the flags must reflect the state BEFORE the grid or a modal
+  // consumes this very keypress, so each press advances one step of the chain.
+  useEffect(() => {
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const store = useVaultStore.getState();
+      const hide = shouldHideOnEscape({
+        editing: store.editing,
+        hasSelection: store.selection !== null,
+        hasRange: store.selectionEnd !== null,
+        // Every modal here renders a CSS-module class named *overlay*; nested
+        // dialogs App cannot see (confirm prompts) are still caught this way.
+        overlayOpen: document.querySelector('[class*="overlay"]') !== null,
+      });
+      if (hide) {
+        invoke("hide_window").catch(() => {});
+      }
+    };
+    window.addEventListener("keydown", onEscape, true);
+    return () => window.removeEventListener("keydown", onEscape, true);
   }, []);
 
   useEffect(() => {

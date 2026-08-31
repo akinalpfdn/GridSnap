@@ -178,6 +178,7 @@ interface VaultStore {
   moveSheet: (fromIndex: number, toIndex: number) => void;
   renameSheet: (index: number, name: string) => void;
   toggleMasked: (index: number) => void;
+  toggleFrozenFirstRow: (index: number) => void;
   toggleCellMask: (mask: boolean) => void;
   setSheetPassword: (index: number, hash: string | null) => void;
   setSheetFailedAttempts: (index: number, attempts: number, lockUntil: string | null) => void;
@@ -555,6 +556,14 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!vault) return;
     const sheets = [...vault.sheets];
     sheets[index] = { ...sheets[index], masked: !sheets[index].masked };
+    set({ vault: { ...vault, sheets }, dirty: true });
+  },
+
+  toggleFrozenFirstRow: (index) => {
+    const { vault } = get();
+    if (!vault) return;
+    const sheets = [...vault.sheets];
+    sheets[index] = { ...sheets[index], frozenFirstRow: !sheets[index].frozenFirstRow };
     set({ vault: { ...vault, sheets }, dirty: true });
   },
 

@@ -10,9 +10,7 @@
 }
 
 .cornerCell {
-  position: sticky;
-  top: 0;
-  left: 0;
+  /* Pinned via inline scroll offsets — see VirtualGrid render */
   z-index: 3;
   background: var(--gs-bg-elevated);
   border-right: 1px solid var(--gs-border-default);
@@ -21,8 +19,6 @@
 }
 
 .columnHeader {
-  position: sticky;
-  top: 0;
   z-index: 2;
   background: var(--gs-bg-elevated);
   border-right: 1px solid var(--gs-border-subtle);
@@ -39,8 +35,6 @@
 }
 
 .rowHeader {
-  position: sticky;
-  left: 0;
   z-index: 1;
   background: var(--gs-bg-elevated);
   border-right: 1px solid var(--gs-border-default);
@@ -117,4 +111,16 @@
 .contextMenuItem svg {
   flex-shrink: 0;
   color: var(--gs-text-secondary);
+}
+
+/* Pinned copy of row 1, above ordinary cells, below the header bands */
+.frozenRowLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.frozenRowLayer > :global(div) {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }

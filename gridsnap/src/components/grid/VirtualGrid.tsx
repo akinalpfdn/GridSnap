@@ -9,6 +9,7 @@ import { readClipboard } from "../../services/clipboardService";
 import { buildPrefixSums, findStartIndex, findEndIndex, colToLetter, hitTestIndex } from "../../utils/gridMath";
 import { encodeCellKey } from "../../utils/cellKey";
 import { parseTsv } from "../../utils/tsv";
+import { coveredViewportTop, pinnedRowTop, rowAtViewportY } from "../../utils/frozenRow";
 import { GridCell } from "./GridCell";
 import styles from "./VirtualGrid.module.css";
 
@@ -54,6 +55,9 @@ export function VirtualGrid() {
   );
   const sheetUnlocked = useVaultStore((s) => s.sheetUnlocked);
   const isSheetLocked = !!sheetPasswordHash && !sheetUnlocked;
+  const isFrozen = useVaultStore(
+    (s) => s.vault?.sheets[s.activeSheetIndex]?.frozenFirstRow ?? false
+  );
 
   const { handleKeyDown } = useGridNavigation();
   const { onMouseDown: onColResizeDown } = useColumnResize();
@@ -82,6 +86,8 @@ export function VirtualGrid() {
   colSumsRef.current = colSums;
   const rowSumsRef = useRef(rowSums);
   rowSumsRef.current = rowSums;
+  const isFrozenRef = useRef(isFrozen);
+  isFrozenRef.current = isFrozen;
 
   const totalWidth = colSums[TOTAL_COLS] + ROW_HEADER_WIDTH;
   const totalHeight = rowSums[TOTAL_ROWS] + DEFAULT_ROW_HEIGHT; // +header row
@@ -106,9 +112,15 @@ export function VirtualGrid() {
     if (!el) return null;
     const rect = el.getBoundingClientRect();
     const x = e.clientX - rect.left + el.scrollLeft - ROW_HEADER_WIDTH;
-    const y = e.clientY - rect.top + el.scrollTop - DEFAULT_ROW_HEIGHT;
     const col = hitTestIndex(colSumsRef.current, x);
-    const row = hitTestIndex(rowSumsRef.current, y);
+    const row = rowAtViewportY({
+      yViewport: e.clientY - rect.top,
+      scrollTop: el.scrollTop,
+      headerHeight: DEFAULT_ROW_HEIGHT,
+      frozen: isFrozenRef.current,
+      row0Height: rowSumsRef.current[1] - rowSumsRef.current[0],
+      rowSums: rowSumsRef.current,
+    });
     if (row < 0 || col < 0) return null;
     return { row, col };
   }, []);
@@ -243,10 +255,15 @@ export function VirtualGrid() {
     const cellLeft = colSumsRef.current[pendingScroll.col] + ROW_HEADER_WIDTH;
     const cellRight = colSumsRef.current[pendingScroll.col + 1] + ROW_HEADER_WIDTH;
 
+    const covered = coveredViewportTop({
+      headerHeight: DEFAULT_ROW_HEIGHT,
+      frozen: isFrozenRef.current && pendingScroll.row !== 0,
+      row0Height: rowSumsRef.current[1] - rowSumsRef.current[0],
+    });
     // Only move if the cell is outside the viewport, so stepping through
     // neighbouring hits does not jerk the view around.
-    if (cellTop < el.scrollTop + DEFAULT_ROW_HEIGHT) {
-      el.scrollTop = cellTop - DEFAULT_ROW_HEIGHT * 2;
+    if (cellTop < el.scrollTop + covered) {
+      el.scrollTop = cellTop - covered - DEFAULT_ROW_HEIGHT;
     } else if (cellBottom > el.scrollTop + el.clientHeight) {
       el.scrollTop = cellBottom - el.clientHeight + DEFAULT_ROW_HEIGHT;
     }
@@ -355,7 +372,7 @@ export function VirtualGrid() {
     [handleKeyDown, copySelected, cutSelected, pasteAtSelection, isSheetLocked]
   );
 
-  // Render column headers
+  // Render column headers — pinned by translating with the vertical scroll
   const colHeaders: React.ReactNode[] = [];
   for (let c = startCol; c <= endCol; c++) {
     const x = colSums[c] + ROW_HEADER_WIDTH;
@@ -368,7 +385,7 @@ export function VirtualGrid() {
         style={{
           position: "absolute",
           left: x,
-          top: 0,
+          top: scrollTop,
           width: w,
           height: DEFAULT_ROW_HEIGHT,
         }}
@@ -382,9 +399,10 @@ export function VirtualGrid() {
     );
   }
 
-  // Render row headers
+  // Render row headers — pinned by translating with the horizontal scroll
   const rowHeaders: React.ReactNode[] = [];
   for (let r = startRow; r <= endRow; r++) {
+    if (isFrozen && r === 0) continue; // rendered pinned below
     const y = rowSums[r] + DEFAULT_ROW_HEIGHT;
     const h = rowSums[r + 1] - rowSums[r];
     rowHeaders.push(
@@ -394,7 +412,7 @@ export function VirtualGrid() {
         data-index={r}
         style={{
           position: "absolute",
-          left: 0,
+          left: scrollLeft,
           top: y,
           width: ROW_HEADER_WIDTH,
           height: h,
@@ -412,6 +430,7 @@ export function VirtualGrid() {
   // Render cells — pass all values as primitive props so memo works
   const cells: React.ReactNode[] = [];
   for (let r = startRow; r <= endRow; r++) {
+    if (isFrozen && r === 0) continue; // rendered pinned below
     const y = rowSums[r] + DEFAULT_ROW_HEIGHT;
     const h = rowSums[r + 1] - rowSums[r];
     for (let c = startCol; c <= endCol; c++) {
@@ -442,6 +461,58 @@ export function VirtualGrid() {
     }
   }
 
+  // The frozen copy of row 0: same cells, same interactions, glued under the
+  // column headers. Rendered instead of the in-place row, so at scroll zero it
+  // simply occupies row 0's natural position.
+  const frozenRow: React.ReactNode[] = [];
+  if (isFrozen) {
+    const row0Height = rowSums[1] - rowSums[0];
+    const pinnedTop = pinnedRowTop(scrollTop, DEFAULT_ROW_HEIGHT);
+    for (let c = startCol; c <= endCol; c++) {
+      const x = colSums[c] + ROW_HEADER_WIDTH;
+      const w = colSums[c + 1] - colSums[c];
+      const isAnchor = selection?.row === 0 && selection?.col === c;
+      const isInRange = 0 >= rangeMinRow && 0 <= rangeMaxRow && c >= rangeMinCol && c <= rangeMaxCol;
+      const cellKey = encodeCellKey(0, c);
+      frozenRow.push(
+        <GridCell
+          key={`fz-${cellKey}`}
+          row={0}
+          col={c}
+          left={x}
+          top={pinnedTop}
+          width={w}
+          height={row0Height}
+          value={safeData[cellKey] ?? ""}
+          isSelected={isAnchor}
+          isInRange={hasRange && isInRange}
+          isEditing={isAnchor && editing}
+          editInitialChar={isAnchor && editing ? editInitialChar : undefined}
+          isMasked={isSheetLocked || isMasked || (maskedCells?.[cellKey] === true)}
+          isSearchHit={isHit(0, c)}
+          isCurrentSearchHit={isCurrentHit(0, c)}
+        />
+      );
+    }
+    frozenRow.push(
+      <div
+        key="fz-rh"
+        className={styles.rowHeader}
+        data-index={0}
+        style={{
+          position: "absolute",
+          left: scrollLeft,
+          top: pinnedTop,
+          width: ROW_HEADER_WIDTH,
+          height: row0Height,
+        }}
+      >
+        1
+        <div className={styles.resizeHandleRow} onMouseDown={(e) => onRowResizeDown(e, 0, row0Height)} />
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -459,15 +530,18 @@ export function VirtualGrid() {
           className={styles.cornerCell}
           style={{
             position: "absolute",
-            left: 0,
-            top: 0,
+            left: scrollLeft,
+            top: scrollTop,
             width: ROW_HEADER_WIDTH,
             height: DEFAULT_ROW_HEIGHT,
           }}
         />
+        {cells}
+        {isFrozen && (
+          <div className={styles.frozenRowLayer}>{frozenRow}</div>
+        )}
         {colHeaders}
         {rowHeaders}
-        {cells}
       </div>
       {headerMenu && (
         <div

@@ -15,7 +15,7 @@ const SHORTCUTS = [
   { key: "Arrow keys", label: "Navigate grid" },
   { key: "Enter", label: "Edit cell" },
   { key: "Ctrl+Enter", label: "New line inside a cell" },
-  { key: "Escape", label: "Stop editing / deselect" },
+  { key: "Escape", label: "Stop editing / deselect / hide window" },
   { key: "Delete", label: "Clear cell(s)" },
   { key: "Ctrl+C", label: "Copy cell(s)" },
   { key: "Ctrl+X", label: "Cut cell(s)" },

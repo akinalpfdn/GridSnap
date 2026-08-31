@@ -24,6 +24,8 @@ export interface Sheet {
   passwordHash: string | null;
   failedAttempts: number;
   lockUntil: string | null;
+  /** Keeps row 1 visible while scrolling — a table header row. */
+  frozenFirstRow?: boolean;
   data: Record<string, string>;
   columnWidths: Record<number, number>;
   rowHeights: Record<number, number>;

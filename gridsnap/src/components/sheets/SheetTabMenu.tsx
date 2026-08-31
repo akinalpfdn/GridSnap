@@ -5,8 +5,10 @@ interface SheetTabMenuProps {
   x: number;
   y: number;
   isMasked: boolean;
+  isFrozen: boolean;
   hasPassword: boolean;
   onToggleMask: () => void;
+  onToggleFrozen: () => void;
   onSetPassword: () => void;
   onRemovePassword: () => void;
   onRename: () => void;
@@ -17,8 +19,10 @@ export function SheetTabMenu({
   x,
   y,
   isMasked,
+  isFrozen,
   hasPassword,
   onToggleMask,
+  onToggleFrozen,
   onSetPassword,
   onRemovePassword,
   onRename,
@@ -39,6 +43,19 @@ export function SheetTabMenu({
       style={{ left: x, bottom }}
       onMouseDown={(e) => e.stopPropagation()}
     >
+      <button
+        className={styles.menuItem}
+        onClick={() => {
+          onToggleFrozen();
+          onClose();
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <line x1="3" y1="9" x2="21" y2="9" />
+        </svg>
+        {isFrozen ? "Unfreeze first row" : "Freeze first row"}
+      </button>
       <button
         className={styles.menuItem}
         onClick={() => {

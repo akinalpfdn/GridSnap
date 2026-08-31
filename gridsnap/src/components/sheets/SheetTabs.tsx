@@ -188,6 +188,8 @@ export function SheetTabs() {
           y={contextMenu.y}
           isMasked={vault.sheets[contextMenu.index]?.masked ?? false}
           hasPassword={!!vault.sheets[contextMenu.index]?.passwordHash}
+          isFrozen={vault.sheets[contextMenu.index]?.frozenFirstRow ?? false}
+          onToggleFrozen={() => useVaultStore.getState().toggleFrozenFirstRow(contextMenu.index)}
           onToggleMask={() => toggleMasked(contextMenu.index)}
           onSetPassword={() => setPasswordModal({ index: contextMenu.index, mode: "set" })}
           onRemovePassword={() => setPasswordModal({ index: contextMenu.index, mode: "remove" })}

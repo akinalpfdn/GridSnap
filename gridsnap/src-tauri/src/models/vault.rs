@@ -39,6 +39,8 @@ pub struct Sheet {
     pub failed_attempts: u32,
     #[serde(default)]
     pub lock_until: Option<String>,
+    #[serde(default)]
+    pub frozen_first_row: bool,
     pub data: HashMap<String, String>,
     pub column_widths: HashMap<u32, f64>,
     pub row_heights: HashMap<u32, f64>,
@@ -80,6 +82,7 @@ impl Default for Sheet {
             password_hash: None,
             failed_attempts: 0,
             lock_until: None,
+            frozen_first_row: false,
             data: HashMap::new(),
             column_widths: HashMap::new(),
             row_heights: HashMap::new(),
