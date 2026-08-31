@@ -19,7 +19,7 @@ export function Toolbar({ onSettingsClick, onHelpClick, onSave, updateVersion, o
   const setSearchQuery = useVaultStore((s) => s.setSearchQuery);
   const dirty = useVaultStore((s) => s.dirty);
   const saving = useVaultStore((s) => s.saving);
-  const { hitCount, isSheetLocked } = useSearch();
+  const { hitCount, activeHitIndex, nextHit, previousHit, isSheetLocked } = useSearch();
 
   return (
     <div className={styles.toolbar} data-tauri-drag-region onMouseDown={(e) => { if (e.buttons === 1 && e.target === e.currentTarget) appWindow.startDragging(); }}>
@@ -30,15 +30,25 @@ export function Toolbar({ onSettingsClick, onHelpClick, onSave, updateVersion, o
         </svg>
         <input
           className={styles.searchInput}
-          placeholder={isSheetLocked ? "Search disabled" : "Search cells..."}
+          placeholder={isSheetLocked ? "Search disabled" : "Search all sheets..."}
           value={isSheetLocked ? "" : searchQuery}
           onChange={(e) => !isSheetLocked && setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            // Enter walks the results; the grid must not also see the key.
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (e.shiftKey) previousHit();
+              else nextHit();
+            }
+            e.stopPropagation();
+          }}
           disabled={isSheetLocked}
         />
         {searchQuery && (
           <>
-            <span className={styles.hitCount}>{hitCount}</span>
+            <span className={styles.hitCount}>
+              {hitCount === 0 ? "0" : `${activeHitIndex + 1}/${hitCount}`}
+            </span>
             <button
               className={styles.searchClear}
               onClick={() => setSearchQuery("")}

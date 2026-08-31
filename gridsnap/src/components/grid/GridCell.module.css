@@ -39,6 +39,14 @@
   background: rgba(201, 184, 112, 0.12);
 }
 
+/* The one hit currently targeted by Enter, distinct from the rest */
+.currentSearchHit {
+  background: rgba(201, 184, 112, 0.28);
+  outline: 1.5px solid var(--gs-status-warning);
+  outline-offset: -1px;
+  z-index: 2;
+}
+
 .copyBtn {
   position: absolute;
   right: 2px;

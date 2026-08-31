@@ -77,6 +77,10 @@ interface VaultStore {
   editing: boolean;
   editInitialChar: string | undefined;
   searchQuery: string;
+  /** Position within the current search results; -1 when none is targeted. */
+  activeHitIndex: number;
+  /** Cell the grid should scroll into view, cleared once it has. */
+  pendingScroll: GridSelection | null;
   locked: boolean;
   dirty: boolean;
   saving: boolean;
@@ -93,11 +97,13 @@ interface VaultStore {
 
   // Actions
   setVault: (vault: Vault) => void;
-  setActiveSheet: (index: number) => void;
+  setActiveSheet: (index: number, options?: { keepSearch?: boolean }) => void;
   setSelection: (sel: GridSelection | null) => void;
   setSelectionEnd: (sel: GridSelection | null) => void;
   setEditing: (editing: boolean, initialChar?: string) => void;
   setSearchQuery: (query: string) => void;
+  setActiveHitIndex: (index: number) => void;
+  requestScroll: (cell: GridSelection | null) => void;
   setLocked: (locked: boolean) => void;
   setHasPassword: (hasPassword: boolean) => void;
   setSheetUnlocked: (unlocked: boolean) => void;
@@ -147,6 +153,8 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   editing: false,
   editInitialChar: undefined,
   searchQuery: "",
+  activeHitIndex: -1,
+  pendingScroll: null,
   locked: true,
   dirty: false,
   saving: false,
@@ -184,12 +192,24 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 
   // A freshly loaded or imported vault has no history to undo into.
   setVault: (vault) => set({ vault, locked: false, dirty: false, undoStacks: {}, redoStacks: {} }),
-  setActiveSheet: (index) =>
-    set({ activeSheetIndex: index, selection: null, selectionEnd: null, editing: false, searchQuery: "", sheetUnlocked: false }),
+  setActiveSheet: (index, options) =>
+    set({
+      activeSheetIndex: index,
+      selection: null,
+      selectionEnd: null,
+      editing: false,
+      sheetUnlocked: false,
+      // Search-result navigation switches sheets mid-search and must keep the
+      // query; an ordinary tab click still clears it.
+      ...(options?.keepSearch ? {} : { searchQuery: "", activeHitIndex: -1 }),
+    }),
   setSelection: (sel) => set({ selection: sel, selectionEnd: null, editing: false, editInitialChar: undefined }),
   setSelectionEnd: (sel) => set({ selectionEnd: sel }),
   setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
-  setSearchQuery: (query) => set({ searchQuery: query }),
+  // A new query invalidates whatever result was being stepped through.
+  setSearchQuery: (query) => set({ searchQuery: query, activeHitIndex: -1 }),
+  setActiveHitIndex: (activeHitIndex) => set({ activeHitIndex }),
+  requestScroll: (pendingScroll) => set({ pendingScroll }),
   // Locking drops the decrypted vault and the history with it — both hold
   // plaintext in memory. Callers must save first; a locked vault refuses to save.
   setLocked: (locked) =>

@@ -18,6 +18,7 @@ interface GridCellProps {
   editInitialChar?: string;
   isMasked: boolean;
   isSearchHit: boolean;
+  isCurrentSearchHit: boolean;
 }
 
 export const GridCell = memo(function GridCell({
@@ -34,6 +35,7 @@ export const GridCell = memo(function GridCell({
   editInitialChar,
   isMasked,
   isSearchHit,
+  isCurrentSearchHit,
 }: GridCellProps) {
   if (isEditing && isSelected) {
     return (
@@ -62,6 +64,7 @@ export const GridCell = memo(function GridCell({
     isInRange && !isSelected && styles.inRange,
     isMasked && value && styles.masked,
     isSearchHit && styles.searchHit,
+    isCurrentSearchHit && styles.currentSearchHit,
     isMultiline && !isMasked && styles.multiline,
   ]
     .filter(Boolean)

@@ -58,7 +58,7 @@ export function VirtualGrid() {
   const { onMouseDown: onColResizeDown } = useColumnResize();
   const { onMouseDown: onRowResizeDown } = useRowResize();
   const { copySelected, cutSelected } = useClipboard();
-  const { isHit } = useSearch();
+  const { isHit, isCurrentHit } = useSearch();
 
   const safeColumnWidths = columnWidths ?? {};
   const safeRowHeights = rowHeights ?? {};
@@ -213,6 +213,35 @@ export function VirtualGrid() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Search navigation asks the grid to reveal a cell; only the grid knows the
+  // prefix sums and the viewport, so the request is fulfilled here.
+  const pendingScroll = useVaultStore((s) => s.pendingScroll);
+  useEffect(() => {
+    if (!pendingScroll) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const cellTop = rowSumsRef.current[pendingScroll.row] + DEFAULT_ROW_HEIGHT;
+    const cellBottom = rowSumsRef.current[pendingScroll.row + 1] + DEFAULT_ROW_HEIGHT;
+    const cellLeft = colSumsRef.current[pendingScroll.col] + ROW_HEADER_WIDTH;
+    const cellRight = colSumsRef.current[pendingScroll.col + 1] + ROW_HEADER_WIDTH;
+
+    // Only move if the cell is outside the viewport, so stepping through
+    // neighbouring hits does not jerk the view around.
+    if (cellTop < el.scrollTop + DEFAULT_ROW_HEIGHT) {
+      el.scrollTop = cellTop - DEFAULT_ROW_HEIGHT * 2;
+    } else if (cellBottom > el.scrollTop + el.clientHeight) {
+      el.scrollTop = cellBottom - el.clientHeight + DEFAULT_ROW_HEIGHT;
+    }
+    if (cellLeft < el.scrollLeft + ROW_HEADER_WIDTH) {
+      el.scrollLeft = cellLeft - ROW_HEADER_WIDTH * 2;
+    } else if (cellRight > el.scrollLeft + el.clientWidth) {
+      el.scrollLeft = cellRight - el.clientWidth + ROW_HEADER_WIDTH;
+    }
+
+    useVaultStore.getState().requestScroll(null);
+  }, [pendingScroll]);
 
   const onScroll = useCallback(() => {
     const el = containerRef.current;
@@ -389,6 +418,7 @@ export function VirtualGrid() {
           editInitialChar={isAnchor && editing ? editInitialChar : undefined}
           isMasked={isSheetLocked || isMasked || (maskedCells?.[cellKey] === true)}
           isSearchHit={isHit(r, c)}
+          isCurrentSearchHit={isCurrentHit(r, c)}
         />
       );
     }
