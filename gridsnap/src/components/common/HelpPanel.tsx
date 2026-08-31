@@ -13,11 +13,13 @@ const SHORTCUTS = [
   { key: "Ctrl+K", label: "Sheet switcher" },
   { key: "Arrow keys", label: "Navigate grid" },
   { key: "Enter", label: "Edit cell" },
+  { key: "Ctrl+Enter", label: "New line inside a cell" },
   { key: "Escape", label: "Stop editing / deselect" },
   { key: "Delete", label: "Clear cell(s)" },
   { key: "Ctrl+C", label: "Copy cell(s)" },
   { key: "Ctrl+X", label: "Cut cell(s)" },
   { key: "Ctrl+V", label: "Paste" },
+  { key: "Ctrl+Shift+V", label: "Paste into one cell" },
   { key: "Ctrl+Z", label: "Undo" },
   { key: "Ctrl+Y", label: "Redo" },
 ];

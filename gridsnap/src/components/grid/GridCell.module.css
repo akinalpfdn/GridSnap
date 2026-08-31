@@ -79,3 +79,33 @@
   color: var(--gs-status-success);
   opacity: 1 !important;
 }
+
+/* Multi-line editor overlay — replaces the old single-line input */
+.cellEditor {
+  font-family: var(--gs-font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--gs-text-primary);
+  background: var(--gs-bg-overlay);
+  border: none;
+  outline: 2px solid var(--gs-accent);
+  outline-offset: -1px;
+  padding: 4px 6px;
+  resize: none;
+  overflow-y: auto;
+  white-space: pre;
+  cursor: text;
+}
+
+/* Corner wedge marking a value that has more lines than the row shows */
+.multiline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  border-width: 0 0 6px 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--gs-accent) transparent;
+  opacity: 0.65;
+  pointer-events: none;
+}

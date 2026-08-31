@@ -8,6 +8,7 @@ import { useSearch } from "../../hooks/useSearch";
 import { readClipboard } from "../../services/clipboardService";
 import { buildPrefixSums, findStartIndex, findEndIndex, colToLetter, hitTestIndex } from "../../utils/gridMath";
 import { encodeCellKey } from "../../utils/cellKey";
+import { parseTsv } from "../../utils/tsv";
 import { GridCell } from "./GridCell";
 import styles from "./VirtualGrid.module.css";
 
@@ -119,7 +120,9 @@ export function VirtualGrid() {
     // Ignore if clicking on headers, resize handles, or buttons
     const target = e.target as HTMLElement;
     if (target.closest(`.${styles.columnHeader}`) || target.closest(`.${styles.rowHeader}`) || target.closest(`.${styles.cornerCell}`)) return;
-    if (target.closest("button") || target.closest("input")) return;
+    // textarea covers the cell editor: without it a click inside the editor
+    // would reselect the cell and commit instead of moving the caret.
+    if (target.closest("button") || target.closest("input") || target.closest("textarea")) return;
 
     const cell = hitTest(e);
     if (!cell) return;
@@ -219,8 +222,15 @@ export function VirtualGrid() {
     }
   }, []);
 
-  // Paste TSV/plain text at current selection
-  const pasteAtSelection = useCallback(async () => {
+  /**
+   * Writes clipboard text into the grid.
+   *
+   * `raw` puts the whole clipboard into the selected cell untouched, which is
+   * the only way to land a multi-line snippet copied from a terminal in one
+   * cell — such text carries no quoting, so the spreadsheet rules would spread
+   * it over several rows.
+   */
+  const pasteAtSelection = useCallback(async (raw: boolean) => {
     const store = useVaultStore.getState();
     if (!store.selection || store.editing) return;
     let text: string;
@@ -231,28 +241,28 @@ export function VirtualGrid() {
     }
     if (!text) return;
     const { row, col } = store.selection;
-    const lines = text.split(/\r?\n/);
+    const grid = raw ? [[text]] : parseTsv(text);
+
     // Collected and written in one call so a whole pasted block is a single
     // undo step rather than one per cell.
     const cells: { row: number; col: number; value: string }[] = [];
-    for (let r = 0; r < lines.length; r++) {
-      const cols = lines[r].split("\t");
-      for (let c = 0; c < cols.length; c++) {
+    for (let r = 0; r < grid.length; r++) {
+      for (let c = 0; c < grid[r].length; c++) {
         const targetRow = row + r;
         const targetCol = col + c;
         if (targetRow < TOTAL_ROWS && targetCol < TOTAL_COLS) {
-          cells.push({ row: targetRow, col: targetCol, value: cols[c] });
+          cells.push({ row: targetRow, col: targetCol, value: grid[r][c] });
         }
       }
     }
     store.setCells(cells);
+
     // Select the pasted range
-    if (lines.length > 1 || (lines[0] && lines[0].includes("\t"))) {
-      const lastLine = lines[lines.length - 1];
-      const lastColCount = lastLine.split("\t").length;
+    const widest = Math.max(...grid.map((r) => r.length));
+    if (grid.length > 1 || widest > 1) {
       store.setSelectionEnd({
-        row: Math.min(row + lines.length - 1, TOTAL_ROWS - 1),
-        col: Math.min(col + lastColCount - 1, TOTAL_COLS - 1),
+        row: Math.min(row + grid.length - 1, TOTAL_ROWS - 1),
+        col: Math.min(col + widest - 1, TOTAL_COLS - 1),
       });
     }
   }, []);
@@ -271,9 +281,10 @@ export function VirtualGrid() {
         cutSelected();
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
         e.preventDefault();
-        pasteAtSelection();
+        // Shift bypasses the spreadsheet rules: whole clipboard, one cell.
+        pasteAtSelection(e.shiftKey);
         return;
       }
       // Undo/redo are skipped while a cell is being edited so the input keeps

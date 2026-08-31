@@ -50,17 +50,24 @@ export const GridCell = memo(function GridCell({
     );
   }
 
+  // A cell is one row tall, so only the first line can be shown; the wedge in
+  // the corner tells the user the value continues.
+  const newlineAt = value.indexOf("\n");
+  const isMultiline = newlineAt !== -1;
+  const firstLine = isMultiline ? value.slice(0, newlineAt) : value;
+
   const classNames = [
     styles.cell,
     isSelected && styles.selected,
     isInRange && !isSelected && styles.inRange,
     isMasked && value && styles.masked,
     isSearchHit && styles.searchHit,
+    isMultiline && !isMasked && styles.multiline,
   ]
     .filter(Boolean)
     .join(" ");
 
-  const displayValue = isMasked && value && !isSelected ? "●●●●" : value;
+  const displayValue = isMasked && value && !isSelected ? "●●●●" : firstLine;
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
