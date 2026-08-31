@@ -43,5 +43,16 @@ export function useClipboard() {
     }
   }, []);
 
-  return { copySelected };
+  /**
+   * Copy, then clear — and only clear if the copy actually landed, so a
+   * clipboard failure cannot destroy the cells it failed to capture.
+   */
+  const cutSelected = useCallback(async () => {
+    const copied = await copySelected();
+    if (!copied) return false;
+    useVaultStore.getState().clearSelection();
+    return true;
+  }, [copySelected]);
+
+  return { copySelected, cutSelected };
 }

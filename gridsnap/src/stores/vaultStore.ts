@@ -1,8 +1,72 @@
 import { create } from "zustand";
 import type { Sheet, Vault } from "../types/vault";
 import type { GridSelection, GridRange } from "../types/grid";
-import { encodeCellKey } from "../utils/cellKey";
+import { encodeCellKey, decodeCellKey } from "../utils/cellKey";
 import { saveVault } from "../services/vaultService";
+
+/** One cell's value before and after a write. `undefined` means the cell is empty. */
+interface CellChange {
+  key: string;
+  before: string | undefined;
+  after: string | undefined;
+}
+
+/** One undoable step. A paste of 500 cells is a single entry, not 500. */
+interface HistoryEntry {
+  changes: CellChange[];
+}
+
+/**
+ * History is kept per sheet id rather than per sheet index: indices shift when
+ * sheets are added, removed or reordered, and undoing into a password-protected
+ * sheet the user has not unlocked would work around that lock.
+ */
+type HistoryStacks = Record<string, HistoryEntry[]>;
+
+const MAX_HISTORY = 100;
+
+function pushHistory(stacks: HistoryStacks, sheetId: string, entry: HistoryEntry): HistoryStacks {
+  return { ...stacks, [sheetId]: [...(stacks[sheetId] ?? []), entry].slice(-MAX_HISTORY) };
+}
+
+function applyChanges(
+  data: Record<string, string>,
+  changes: CellChange[],
+  direction: "before" | "after"
+): Record<string, string> {
+  const next = { ...data };
+  for (const change of changes) {
+    const value = direction === "before" ? change.before : change.after;
+    if (value === undefined) {
+      delete next[change.key];
+    } else {
+      next[change.key] = value;
+    }
+  }
+  return next;
+}
+
+/**
+ * Selection covering what an entry touched, so undo/redo shows its own effect.
+ * A single cell yields no `end`, keeping it an ordinary selection rather than a
+ * 1x1 range — ranges suppress the per-cell copy button.
+ */
+function changedSelection(changes: CellChange[]): {
+  selection: GridSelection;
+  selectionEnd: GridSelection | null;
+} {
+  const cells = changes.map((c) => decodeCellKey(c.key));
+  const start = {
+    row: Math.min(...cells.map((c) => c.row)),
+    col: Math.min(...cells.map((c) => c.col)),
+  };
+  const end = {
+    row: Math.max(...cells.map((c) => c.row)),
+    col: Math.max(...cells.map((c) => c.col)),
+  };
+  const isSingleCell = start.row === end.row && start.col === end.col;
+  return { selection: start, selectionEnd: isSingleCell ? null : end };
+}
 
 interface VaultStore {
   // State
@@ -18,10 +82,14 @@ interface VaultStore {
   saving: boolean;
   hasPassword: boolean;
   sheetUnlocked: boolean;
+  undoStacks: HistoryStacks;
+  redoStacks: HistoryStacks;
 
   // Computed-like
   activeSheet: () => Sheet | undefined;
   getSelectionRange: () => GridRange | null;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 
   // Actions
   setVault: (vault: Vault) => void;
@@ -36,9 +104,13 @@ interface VaultStore {
 
   // Cell operations
   setCellValue: (row: number, col: number, value: string) => void;
+  /** Writes many cells as ONE undoable step — use this for paste and range clears. */
+  setCells: (cells: { row: number; col: number; value: string }[]) => void;
   clearCell: (row: number, col: number) => void;
   clearSelection: () => void;
   getCellValue: (row: number, col: number) => string;
+  undo: () => void;
+  redo: () => void;
 
   // Column/Row resize
   setColumnWidth: (col: number, width: number) => void;
@@ -79,10 +151,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   saving: false,
   hasPassword: false,
   sheetUnlocked: false,
+  undoStacks: {},
+  redoStacks: {},
 
   activeSheet: () => {
     const { vault, activeSheetIndex } = get();
     return vault?.sheets[activeSheetIndex];
+  },
+
+  canUndo: () => {
+    const sheet = get().activeSheet();
+    return !!sheet && (get().undoStacks[sheet.id]?.length ?? 0) > 0;
+  },
+
+  canRedo: () => {
+    const sheet = get().activeSheet();
+    return !!sheet && (get().redoStacks[sheet.id]?.length ?? 0) > 0;
   },
 
   getSelectionRange: () => {
@@ -97,32 +181,53 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     };
   },
 
-  setVault: (vault) => set({ vault, locked: false, dirty: false }),
+  // A freshly loaded or imported vault has no history to undo into.
+  setVault: (vault) => set({ vault, locked: false, dirty: false, undoStacks: {}, redoStacks: {} }),
   setActiveSheet: (index) =>
     set({ activeSheetIndex: index, selection: null, selectionEnd: null, editing: false, searchQuery: "", sheetUnlocked: false }),
   setSelection: (sel) => set({ selection: sel, selectionEnd: null, editing: false, editInitialChar: undefined }),
   setSelectionEnd: (sel) => set({ selectionEnd: sel }),
   setEditing: (editing, initialChar) => set({ editing, editInitialChar: initialChar }),
   setSearchQuery: (query) => set({ searchQuery: query }),
-  setLocked: (locked) => set({ locked, selection: null, selectionEnd: null, editing: false }),
+  // Locking drops the history too: it holds plaintext cell values in memory,
+  // which must not survive a lock any more than the decrypted vault would.
+  setLocked: (locked) =>
+    set(
+      locked
+        ? { locked, selection: null, selectionEnd: null, editing: false, undoStacks: {}, redoStacks: {} }
+        : { locked, selection: null, selectionEnd: null, editing: false }
+    ),
   setHasPassword: (hasPassword) => set({ hasPassword }),
   setSheetUnlocked: (unlocked) => set({ sheetUnlocked: unlocked }),
 
-  setCellValue: (row, col, value) => {
-    const { vault, activeSheetIndex } = get();
+  setCellValue: (row, col, value) => get().setCells([{ row, col, value }]),
+
+  setCells: (cells) => {
+    const { vault, activeSheetIndex, undoStacks, redoStacks } = get();
     if (!vault) return;
-    const key = encodeCellKey(row, col);
-    const sheets = [...vault.sheets];
-    const sheet = { ...sheets[activeSheetIndex] };
-    sheet.data = { ...sheet.data };
-    if (value === "") {
-      delete sheet.data[key];
-    } else {
-      sheet.data[key] = value;
+    const sheet = vault.sheets[activeSheetIndex];
+    if (!sheet) return;
+
+    const changes: CellChange[] = [];
+    for (const { row, col, value } of cells) {
+      const key = encodeCellKey(row, col);
+      const before = sheet.data[key];
+      const after = value === "" ? undefined : value;
+      // Writing a cell its current value is not a step worth undoing.
+      if (before === after) continue;
+      changes.push({ key, before, after });
     }
-    sheets[activeSheetIndex] = sheet;
-    const updated = { ...vault, sheets, updatedAt: String(Date.now()) };
-    set({ vault: updated, dirty: true });
+    if (changes.length === 0) return;
+
+    const sheets = [...vault.sheets];
+    sheets[activeSheetIndex] = { ...sheet, data: applyChanges(sheet.data, changes, "after") };
+    set({
+      vault: { ...vault, sheets, updatedAt: String(Date.now()) },
+      dirty: true,
+      undoStacks: pushHistory(undoStacks, sheet.id, { changes }),
+      // Any new edit invalidates the redo branch.
+      redoStacks: { ...redoStacks, [sheet.id]: [] },
+    });
   },
 
   clearCell: (row, col) => get().setCellValue(row, col, ""),
@@ -130,18 +235,56 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   clearSelection: () => {
     const range = get().getSelectionRange();
     if (!range) return;
-    const { vault, activeSheetIndex } = get();
-    if (!vault) return;
-    const sheets = [...vault.sheets];
-    const sheet = { ...sheets[activeSheetIndex] };
-    sheet.data = { ...sheet.data };
+    const cells: { row: number; col: number; value: string }[] = [];
     for (let r = range.startRow; r <= range.endRow; r++) {
       for (let c = range.startCol; c <= range.endCol; c++) {
-        delete sheet.data[encodeCellKey(r, c)];
+        cells.push({ row: r, col: c, value: "" });
       }
     }
-    sheets[activeSheetIndex] = sheet;
-    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, dirty: true });
+    get().setCells(cells);
+  },
+
+  undo: () => {
+    const { vault, activeSheetIndex, undoStacks, redoStacks } = get();
+    if (!vault) return;
+    const sheet = vault.sheets[activeSheetIndex];
+    if (!sheet) return;
+    const stack = undoStacks[sheet.id] ?? [];
+    const entry = stack[stack.length - 1];
+    if (!entry) return;
+
+    const sheets = [...vault.sheets];
+    sheets[activeSheetIndex] = { ...sheet, data: applyChanges(sheet.data, entry.changes, "before") };
+    set({
+      vault: { ...vault, sheets, updatedAt: String(Date.now()) },
+      dirty: true,
+      undoStacks: { ...undoStacks, [sheet.id]: stack.slice(0, -1) },
+      redoStacks: pushHistory(redoStacks, sheet.id, entry),
+      // Show what was reverted rather than leaving the user hunting for it.
+      ...changedSelection(entry.changes),
+      editing: false,
+    });
+  },
+
+  redo: () => {
+    const { vault, activeSheetIndex, undoStacks, redoStacks } = get();
+    if (!vault) return;
+    const sheet = vault.sheets[activeSheetIndex];
+    if (!sheet) return;
+    const stack = redoStacks[sheet.id] ?? [];
+    const entry = stack[stack.length - 1];
+    if (!entry) return;
+
+    const sheets = [...vault.sheets];
+    sheets[activeSheetIndex] = { ...sheet, data: applyChanges(sheet.data, entry.changes, "after") };
+    set({
+      vault: { ...vault, sheets, updatedAt: String(Date.now()) },
+      dirty: true,
+      redoStacks: { ...redoStacks, [sheet.id]: stack.slice(0, -1) },
+      undoStacks: pushHistory(undoStacks, sheet.id, entry),
+      ...changedSelection(entry.changes),
+      editing: false,
+    });
   },
 
   getCellValue: (row, col) => {
@@ -208,11 +351,26 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   removeSheet: (index) => {
-    const { vault, activeSheetIndex } = get();
+    const { vault, activeSheetIndex, undoStacks, redoStacks } = get();
     if (!vault || vault.sheets.length <= 1) return;
+    const removedId = vault.sheets[index]?.id;
     const sheets = vault.sheets.filter((_, i) => i !== index);
     const newIndex = activeSheetIndex >= sheets.length ? sheets.length - 1 : activeSheetIndex;
-    set({ vault: { ...vault, sheets, updatedAt: String(Date.now()) }, activeSheetIndex: newIndex, dirty: true });
+    // Drop the deleted sheet's history — it would otherwise keep that sheet's
+    // plaintext cell values alive with nothing able to reach them.
+    const undo = { ...undoStacks };
+    const redo = { ...redoStacks };
+    if (removedId) {
+      delete undo[removedId];
+      delete redo[removedId];
+    }
+    set({
+      vault: { ...vault, sheets, updatedAt: String(Date.now()) },
+      activeSheetIndex: newIndex,
+      dirty: true,
+      undoStacks: undo,
+      redoStacks: redo,
+    });
   },
 
   moveSheet: (fromIndex, toIndex) => {

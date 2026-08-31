@@ -16,7 +16,10 @@ const SHORTCUTS = [
   { key: "Escape", label: "Stop editing / deselect" },
   { key: "Delete", label: "Clear cell(s)" },
   { key: "Ctrl+C", label: "Copy cell(s)" },
+  { key: "Ctrl+X", label: "Cut cell(s)" },
   { key: "Ctrl+V", label: "Paste" },
+  { key: "Ctrl+Z", label: "Undo" },
+  { key: "Ctrl+Y", label: "Redo" },
 ];
 
 const TIPS = [

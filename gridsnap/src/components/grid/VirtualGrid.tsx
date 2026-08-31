@@ -56,7 +56,7 @@ export function VirtualGrid() {
   const { handleKeyDown } = useGridNavigation();
   const { onMouseDown: onColResizeDown } = useColumnResize();
   const { onMouseDown: onRowResizeDown } = useRowResize();
-  const { copySelected } = useClipboard();
+  const { copySelected, cutSelected } = useClipboard();
   const { isHit } = useSearch();
 
   const safeColumnWidths = columnWidths ?? {};
@@ -232,16 +232,20 @@ export function VirtualGrid() {
     if (!text) return;
     const { row, col } = store.selection;
     const lines = text.split(/\r?\n/);
+    // Collected and written in one call so a whole pasted block is a single
+    // undo step rather than one per cell.
+    const cells: { row: number; col: number; value: string }[] = [];
     for (let r = 0; r < lines.length; r++) {
       const cols = lines[r].split("\t");
       for (let c = 0; c < cols.length; c++) {
         const targetRow = row + r;
         const targetCol = col + c;
         if (targetRow < TOTAL_ROWS && targetCol < TOTAL_COLS) {
-          store.setCellValue(targetRow, targetCol, cols[c]);
+          cells.push({ row: targetRow, col: targetCol, value: cols[c] });
         }
       }
     }
+    store.setCells(cells);
     // Select the pasted range
     if (lines.length > 1 || (lines[0] && lines[0].includes("\t"))) {
       const lastLine = lines[lines.length - 1];
@@ -262,14 +266,37 @@ export function VirtualGrid() {
         copySelected();
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "x") {
+        e.preventDefault();
+        cutSelected();
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === "v") {
         e.preventDefault();
         pasteAtSelection();
         return;
       }
+      // Undo/redo are skipped while a cell is being edited so the input keeps
+      // its own native undo.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        if (useVaultStore.getState().editing) return;
+        e.preventDefault();
+        if (e.shiftKey) {
+          useVaultStore.getState().redo();
+        } else {
+          useVaultStore.getState().undo();
+        }
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        if (useVaultStore.getState().editing) return;
+        e.preventDefault();
+        useVaultStore.getState().redo();
+        return;
+      }
       handleKeyDown(e);
     },
-    [handleKeyDown, copySelected, pasteAtSelection, isSheetLocked]
+    [handleKeyDown, copySelected, cutSelected, pasteAtSelection, isSheetLocked]
   );
 
   // Render column headers
