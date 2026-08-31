@@ -27,6 +27,7 @@ export function VirtualGrid() {
   const [viewportHeight, setViewportHeight] = useState(600);
   const draggingRef = useRef(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [headerMenu, setHeaderMenu] = useState<{ x: number; y: number; axis: "row" | "col"; index: number } | null>(null);
 
   const selection = useVaultStore((s) => s.selection);
   const selectionEnd = useVaultStore((s) => s.selectionEnd);
@@ -141,7 +142,19 @@ export function VirtualGrid() {
   const onContextMenu = useCallback((e: React.MouseEvent) => {
     if (isSheetLocked) return;
     const target = e.target as HTMLElement;
-    if (target.closest(`.${styles.columnHeader}`) || target.closest(`.${styles.rowHeader}`) || target.closest(`.${styles.cornerCell}`)) return;
+    if (target.closest(`.${styles.cornerCell}`)) return;
+
+    // Header right-click: structural operations on that row or column.
+    const colHeader = target.closest(`.${styles.columnHeader}`);
+    const rowHeader = target.closest(`.${styles.rowHeader}`);
+    if (colHeader || rowHeader) {
+      e.preventDefault();
+      const index = Number((colHeader ?? rowHeader)!.getAttribute("data-index"));
+      if (!Number.isNaN(index)) {
+        setHeaderMenu({ x: e.clientX, y: e.clientY, axis: colHeader ? "col" : "row", index });
+      }
+      return;
+    }
 
     const cell = hitTest(e);
     if (!cell) return;
@@ -159,13 +172,16 @@ export function VirtualGrid() {
     setContextMenu({ x: e.clientX, y: e.clientY });
   }, [hitTest, isSheetLocked]);
 
-  // Close context menu on click anywhere
+  // Close context menus on click anywhere
   useEffect(() => {
-    if (!contextMenu) return;
-    const close = () => setContextMenu(null);
+    if (!contextMenu && !headerMenu) return;
+    const close = () => {
+      setContextMenu(null);
+      setHeaderMenu(null);
+    };
     window.addEventListener("mousedown", close);
     return () => window.removeEventListener("mousedown", close);
-  }, [contextMenu]);
+  }, [contextMenu, headerMenu]);
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
@@ -348,6 +364,7 @@ export function VirtualGrid() {
       <div
         key={`ch-${c}`}
         className={styles.columnHeader}
+        data-index={c}
         style={{
           position: "absolute",
           left: x,
@@ -374,6 +391,7 @@ export function VirtualGrid() {
       <div
         key={`rh-${r}`}
         className={styles.rowHeader}
+        data-index={r}
         style={{
           position: "absolute",
           left: 0,
@@ -451,6 +469,51 @@ export function VirtualGrid() {
         {rowHeaders}
         {cells}
       </div>
+      {headerMenu && (
+        <div
+          className={styles.contextMenu}
+          style={{ left: headerMenu.x, top: headerMenu.y }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {(() => {
+            const { axis, index } = headerMenu;
+            const run = (op: "insertRow" | "deleteRow" | "insertColumn" | "deleteColumn", at: number) => {
+              const done = useVaultStore.getState().applyStructural(op, at);
+              setHeaderMenu(null);
+              if (!done) {
+                // The only refusal: the far edge holds data that would fall off.
+                window.dispatchEvent(new CustomEvent("gridsnap:edge-blocked"));
+              }
+            };
+            const name = axis === "row" ? `row ${index + 1}` : `column ${colToLetter(index)}`;
+            return axis === "row" ? (
+              <>
+                <button className={styles.contextMenuItem} onClick={() => run("insertRow", index)}>
+                  Insert row above
+                </button>
+                <button className={styles.contextMenuItem} onClick={() => run("insertRow", index + 1)}>
+                  Insert row below
+                </button>
+                <button className={styles.contextMenuItem} onClick={() => run("deleteRow", index)}>
+                  Delete {name}
+                </button>
+              </>
+            ) : (
+              <>
+                <button className={styles.contextMenuItem} onClick={() => run("insertColumn", index)}>
+                  Insert column left
+                </button>
+                <button className={styles.contextMenuItem} onClick={() => run("insertColumn", index + 1)}>
+                  Insert column right
+                </button>
+                <button className={styles.contextMenuItem} onClick={() => run("deleteColumn", index)}>
+                  Delete {name}
+                </button>
+              </>
+            );
+          })()}
+        </div>
+      )}
       {contextMenu && (
         <div
           className={styles.contextMenu}

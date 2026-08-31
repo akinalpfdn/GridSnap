@@ -1,6 +1,15 @@
 import { create } from "zustand";
 import type { Sheet, Vault } from "../types/vault";
 import { pushRecent } from "../utils/recents";
+import {
+  canInsertColumn,
+  canInsertRow,
+  deleteColumn,
+  deleteRow,
+  insertColumn,
+  insertRow,
+  type SheetStructure,
+} from "../utils/gridStructure";
 import type { GridSelection, GridRange } from "../types/grid";
 import { encodeCellKey, decodeCellKey } from "../utils/cellKey";
 import { saveVault } from "../services/vaultService";
@@ -12,9 +21,36 @@ interface CellChange {
   after: string | undefined;
 }
 
-/** One undoable step. A paste of 500 cells is a single entry, not 500. */
+/** Row heights, column widths and masks — the parts a structural edit moves. */
+interface SheetLayout {
+  maskedCells: Record<string, boolean>;
+  rowHeights: Record<number, number>;
+  columnWidths: Record<number, number>;
+}
+
+/**
+ * One undoable step. A paste of 500 cells is a single entry, not 500.
+ * `layout` is present only for structural edits (row/column insert/delete),
+ * whose effects reach beyond cell data.
+ */
 interface HistoryEntry {
   changes: CellChange[];
+  layout?: { before: SheetLayout; after: SheetLayout };
+}
+
+/** Diff of two sparse data maps as history changes, over the union of keys. */
+function diffData(
+  before: Record<string, string>,
+  after: Record<string, string>
+): CellChange[] {
+  const changes: CellChange[] = [];
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  for (const key of keys) {
+    if (before[key] !== after[key]) {
+      changes.push({ key, before: before[key], after: after[key] });
+    }
+  }
+  return changes;
 }
 
 /**
@@ -53,9 +89,12 @@ function applyChanges(
  * 1x1 range — ranges suppress the per-cell copy button.
  */
 function changedSelection(changes: CellChange[]): {
-  selection: GridSelection;
-  selectionEnd: GridSelection | null;
+  selection?: GridSelection;
+  selectionEnd?: GridSelection | null;
 } {
+  // A structural edit on an empty region moves no cells; leave selection alone
+  // rather than aiming it at Math.min() of nothing.
+  if (changes.length === 0) return {};
   const cells = changes.map((c) => decodeCellKey(c.key));
   const start = {
     row: Math.min(...cells.map((c) => c.row)),
@@ -116,6 +155,8 @@ interface VaultStore {
   clearCell: (row: number, col: number) => void;
   clearSelection: () => void;
   getCellValue: (row: number, col: number) => string;
+  /** Insert/delete a row or column; one undo step. Returns false when refused. */
+  applyStructural: (op: "insertRow" | "deleteRow" | "insertColumn" | "deleteColumn", index: number) => boolean;
   undo: () => void;
   redo: () => void;
 
@@ -271,6 +312,60 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     get().setCells(cells);
   },
 
+  applyStructural: (op, index) => {
+    const { vault, activeSheetIndex, undoStacks, redoStacks } = get();
+    if (!vault) return false;
+    const sheet = vault.sheets[activeSheetIndex];
+    if (!sheet) return false;
+
+    // Inserting shifts content toward the fixed edge; refuse rather than let
+    // cells fall off the end of the grid.
+    if (op === "insertRow" && !canInsertRow(sheet.data, 1000)) return false;
+    if (op === "insertColumn" && !canInsertColumn(sheet.data, 26)) return false;
+
+    const before: SheetStructure = {
+      data: sheet.data,
+      maskedCells: sheet.maskedCells ?? {},
+      rowHeights: sheet.rowHeights,
+      columnWidths: sheet.columnWidths,
+    };
+    const apply = { insertRow, deleteRow, insertColumn, deleteColumn }[op];
+    const after = apply(before, index);
+
+    const entry: HistoryEntry = {
+      changes: diffData(before.data, after.data),
+      layout: {
+        before: {
+          maskedCells: before.maskedCells,
+          rowHeights: before.rowHeights,
+          columnWidths: before.columnWidths,
+        },
+        after: {
+          maskedCells: after.maskedCells,
+          rowHeights: after.rowHeights,
+          columnWidths: after.columnWidths,
+        },
+      },
+    };
+
+    const sheets = [...vault.sheets];
+    sheets[activeSheetIndex] = { ...sheet, ...after };
+    set({
+      vault: { ...vault, sheets, updatedAt: String(Date.now()) },
+      dirty: true,
+      undoStacks: pushHistory(undoStacks, sheet.id, entry),
+      redoStacks: { ...redoStacks, [sheet.id]: [] },
+      // Land on the affected line so the result of the action is visible.
+      selection:
+        op === "insertColumn" || op === "deleteColumn"
+          ? { row: 0, col: Math.min(index, 25) }
+          : { row: Math.min(index, 999), col: 0 },
+      selectionEnd: null,
+      editing: false,
+    });
+    return true;
+  },
+
   undo: () => {
     const { vault, activeSheetIndex, undoStacks, redoStacks } = get();
     if (!vault) return;
@@ -281,7 +376,11 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!entry) return;
 
     const sheets = [...vault.sheets];
-    sheets[activeSheetIndex] = { ...sheet, data: applyChanges(sheet.data, entry.changes, "before") };
+    sheets[activeSheetIndex] = {
+      ...sheet,
+      data: applyChanges(sheet.data, entry.changes, "before"),
+      ...(entry.layout ? entry.layout.before : {}),
+    };
     set({
       vault: { ...vault, sheets, updatedAt: String(Date.now()) },
       dirty: true,
@@ -303,7 +402,11 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     if (!entry) return;
 
     const sheets = [...vault.sheets];
-    sheets[activeSheetIndex] = { ...sheet, data: applyChanges(sheet.data, entry.changes, "after") };
+    sheets[activeSheetIndex] = {
+      ...sheet,
+      data: applyChanges(sheet.data, entry.changes, "after"),
+      ...(entry.layout ? entry.layout.after : {}),
+    };
     set({
       vault: { ...vault, sheets, updatedAt: String(Date.now()) },
       dirty: true,

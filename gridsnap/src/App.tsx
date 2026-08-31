@@ -213,6 +213,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const onEdgeBlocked = () =>
+      setToast("Cannot insert: the last row/column holds data that would fall off");
+    window.addEventListener("gridsnap:edge-blocked", onEdgeBlocked);
+    return () => window.removeEventListener("gridsnap:edge-blocked", onEdgeBlocked);
+  }, []);
+
+  useEffect(() => {
     const unlisten = listen("vault-locked", () => {
       setLocked(true);
     });
