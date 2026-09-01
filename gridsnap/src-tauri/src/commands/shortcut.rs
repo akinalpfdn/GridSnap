@@ -77,19 +77,31 @@ fn parse_shortcut(s: &str) -> Result<Shortcut, String> {
     Ok(Shortcut::new(mods, code))
 }
 
+/// (Re)registers both global shortcuts: the window toggle, and optionally a
+/// second one that summons the window straight into the quick-copy palette.
+/// Always called with both so changing one cannot silently drop the other.
 #[tauri::command]
-pub fn change_shortcut(app: tauri::AppHandle, new_shortcut: String) -> Result<(), String> {
-    let shortcut = parse_shortcut(&new_shortcut)?;
+pub fn change_shortcut(
+    app: tauri::AppHandle,
+    new_shortcut: String,
+    palette_shortcut: Option<String>,
+) -> Result<(), String> {
+    let toggle = parse_shortcut(&new_shortcut)?;
+    let palette = match palette_shortcut.as_deref().filter(|s| !s.trim().is_empty()) {
+        Some(raw) => Some(parse_shortcut(raw)?),
+        None => None,
+    };
+    if palette == Some(toggle) {
+        return Err("Quick copy shortcut must differ from the toggle shortcut".to_string());
+    }
 
-    // Unregister all existing shortcuts
     app.global_shortcut()
         .unregister_all()
         .map_err(|e| format!("Failed to unregister shortcuts: {}", e))?;
 
-    // Register new shortcut with toggle-window handler
     let handle = app.clone();
     app.global_shortcut()
-        .on_shortcut(shortcut, move |_app, _shortcut, event| {
+        .on_shortcut(toggle, move |_app, _shortcut, event| {
             if event.state == ShortcutState::Pressed {
                 if let Some(window) = handle.get_webview_window("main") {
                     if window.is_visible().unwrap_or(false) {
@@ -98,12 +110,27 @@ pub fn change_shortcut(app: tauri::AppHandle, new_shortcut: String) -> Result<()
                         let _ = window.show();
                         let _ = window.set_always_on_top(true);
                         let _ = window.set_focus();
-                        let _ = handle.emit("hotkey-summoned", ());
                     }
                 }
             }
         })
         .map_err(|e| format!("Failed to register shortcut: {}", e))?;
+
+    if let Some(palette) = palette {
+        let handle = app.clone();
+        app.global_shortcut()
+            .on_shortcut(palette, move |_app, _shortcut, event| {
+                if event.state == ShortcutState::Pressed {
+                    if let Some(window) = handle.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_always_on_top(true);
+                        let _ = window.set_focus();
+                        let _ = handle.emit("palette-summoned", ());
+                    }
+                }
+            })
+            .map_err(|e| format!("Failed to register quick copy shortcut: {}", e))?;
+    }
 
     Ok(())
 }

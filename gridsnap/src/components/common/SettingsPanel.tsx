@@ -20,8 +20,6 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setHasPassword = useVaultStore((s) => s.setHasPassword);
   const idleLockMinutes = useVaultStore((s) => s.vault?.settings.idleLockMinutes ?? 0);
   const setIdleLockMinutes = useVaultStore((s) => s.setIdleLockMinutes);
-  const openPaletteOnSummon = useVaultStore((s) => s.vault?.settings.openPaletteOnSummon ?? false);
-  const setOpenPaletteOnSummon = useVaultStore((s) => s.setOpenPaletteOnSummon);
 
   // Autostart
   const [autostart, setAutostart] = useState(false);
@@ -243,22 +241,17 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           <div className={styles.sectionTitle}>Global Shortcut</div>
           <div className={styles.row}>
             <span className={styles.rowLabel}>Toggle window</span>
-            <ShortcutRecorder />
+            <ShortcutRecorder kind="toggle" />
+          </div>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Open quick copy</span>
+            <ShortcutRecorder kind="palette" />
           </div>
         </div>
 
         {/* Startup */}
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Startup</div>
-          <div className={styles.row}>
-            <span className={styles.rowLabel}>Open quick copy when summoned</span>
-            <button
-              className={`${styles.toggle} ${openPaletteOnSummon ? styles.toggleOn : ""}`}
-              onClick={() => setOpenPaletteOnSummon(!openPaletteOnSummon)}
-            >
-              <span className={styles.toggleThumb} />
-            </button>
-          </div>
           <div className={styles.row}>
             <span className={styles.rowLabel}>Launch on system startup</span>
             <button

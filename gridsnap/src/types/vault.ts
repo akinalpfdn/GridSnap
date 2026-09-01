@@ -36,7 +36,8 @@ export interface VaultSettings {
   hotkey: string;
   idleLockMinutes: number;
   autoSaveDebounceMs: number;
-  openPaletteOnSummon?: boolean;
+  /** Second global shortcut: summon straight into the quick-copy palette. */
+  paletteHotkey?: string;
 }
 
 export type CellKey = `${number},${number}`;

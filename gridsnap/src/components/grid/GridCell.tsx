@@ -52,11 +52,10 @@ export const GridCell = memo(function GridCell({
     );
   }
 
-  // A cell is one row tall, so only the first line can be shown; the wedge in
-  // the corner tells the user the value continues.
-  const newlineAt = value.indexOf("\n");
-  const isMultiline = newlineAt !== -1;
-  const firstLine = isMultiline ? value.slice(0, newlineAt) : value;
+  // The full value is rendered with newlines preserved: a taller row reveals
+  // more lines, overflow stays clipped, and the corner wedge marks that the
+  // value continues beyond what fits.
+  const isMultiline = value.includes("\n");
 
   const classNames = [
     styles.cell,
@@ -70,7 +69,7 @@ export const GridCell = memo(function GridCell({
     .filter(Boolean)
     .join(" ");
 
-  const displayValue = isMasked && value && !isSelected ? "●●●●" : firstLine;
+  const displayValue = isMasked && value && !isSelected ? "●●●●" : value;
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();

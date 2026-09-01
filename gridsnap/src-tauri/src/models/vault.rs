@@ -53,8 +53,10 @@ pub struct VaultSettings {
     pub hotkey: String,
     pub idle_lock_minutes: u32,
     pub auto_save_debounce_ms: u32,
+    /// Second global shortcut that summons the window straight into the
+    /// quick-copy palette. None = not set.
     #[serde(default)]
-    pub open_palette_on_summon: bool,
+    pub palette_hotkey: Option<String>,
 }
 
 impl Default for Vault {
@@ -97,7 +99,7 @@ impl Default for VaultSettings {
             hotkey: "Ctrl+Shift+Space".to_string(),
             idle_lock_minutes: 5,
             auto_save_debounce_ms: 500,
-            open_palette_on_summon: false,
+            palette_hotkey: None,
         }
     }
 }

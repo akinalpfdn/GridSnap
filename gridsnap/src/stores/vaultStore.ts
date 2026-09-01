@@ -167,7 +167,7 @@ interface VaultStore {
   // Settings
   setHotkey: (hotkey: string) => void;
   setIdleLockMinutes: (minutes: number) => void;
-  setOpenPaletteOnSummon: (value: boolean) => void;
+  setPaletteHotkey: (hotkey: string | null) => void;
   /** Remembers a successful single-cell copy for the palette recents list. */
   recordCopy: (sheetIndex: number, row: number, col: number) => void;
   setTheme: (theme: string) => void;
@@ -462,10 +462,13 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     set({ vault: { ...vault, settings: { ...vault.settings, idleLockMinutes } }, dirty: true });
   },
 
-  setOpenPaletteOnSummon: (openPaletteOnSummon) => {
+  setPaletteHotkey: (hotkey) => {
     const { vault } = get();
     if (!vault) return;
-    set({ vault: { ...vault, settings: { ...vault.settings, openPaletteOnSummon } }, dirty: true });
+    set({
+      vault: { ...vault, settings: { ...vault.settings, paletteHotkey: hotkey ?? undefined } },
+      dirty: true,
+    });
   },
 
   recordCopy: (sheetIndex, row, col) => {

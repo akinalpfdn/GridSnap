@@ -105,6 +105,14 @@
   cursor: text;
 }
 
+/* Multi-line values: lines flow from the top and clip at the row's height */
+.multiline {
+  white-space: pre;
+  align-items: flex-start;
+  padding-top: 4px;
+  line-height: 20px;
+}
+
 /* Corner wedge marking a value that has more lines than the row shows */
 .multiline::after {
   content: "";

@@ -4,7 +4,7 @@ mod services;
 mod tray;
 
 use std::sync::Mutex;
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 #[cfg(target_os = "macos")]
 use tauri::ActivationPolicy;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
@@ -56,9 +56,6 @@ pub fn run() {
                             let _ = window.show();
                             let _ = window.set_always_on_top(true);
                             let _ = window.set_focus();
-                            // Lets the frontend open the quick-copy palette
-                            // when the user has asked for that.
-                            let _ = handle.emit("hotkey-summoned", ());
                         }
                     }
                 }

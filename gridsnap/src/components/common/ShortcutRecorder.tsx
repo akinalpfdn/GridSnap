@@ -52,9 +52,16 @@ function isModifierKey(code: string): boolean {
   );
 }
 
-export function ShortcutRecorder() {
+interface ShortcutRecorderProps {
+  /** Which shortcut this recorder edits: the window toggle, or the palette. */
+  kind?: "toggle" | "palette";
+}
+
+export function ShortcutRecorder({ kind = "toggle" }: ShortcutRecorderProps) {
   const hotkey = useVaultStore((s) => s.vault?.settings.hotkey ?? "Ctrl+Shift+Space");
+  const paletteHotkey = useVaultStore((s) => s.vault?.settings.paletteHotkey ?? null);
   const setHotkey = useVaultStore((s) => s.setHotkey);
+  const setPaletteHotkey = useVaultStore((s) => s.setPaletteHotkey);
 
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState("");
@@ -89,8 +96,13 @@ export function ShortcutRecorder() {
       setSaving(true);
       setError("");
       try {
-        await changeShortcut(shortcutStr);
-        setHotkey(shortcutStr);
+        if (kind === "toggle") {
+          await changeShortcut(shortcutStr, paletteHotkey);
+          setHotkey(shortcutStr);
+        } else {
+          await changeShortcut(hotkey, shortcutStr);
+          setPaletteHotkey(shortcutStr);
+        }
         setRecording(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -98,7 +110,7 @@ export function ShortcutRecorder() {
         setSaving(false);
       }
     },
-    [setHotkey]
+    [kind, hotkey, paletteHotkey, setHotkey, setPaletteHotkey]
   );
 
   useEffect(() => {
@@ -127,12 +139,30 @@ export function ShortcutRecorder() {
     );
   }
 
+  const shown = kind === "toggle" ? hotkey : paletteHotkey;
+
+  const clearPalette = async () => {
+    setError("");
+    try {
+      await changeShortcut(hotkey, null);
+      setPaletteHotkey(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
   return (
     <div className={styles.recorderRow}>
-      <span className={styles.shortcutDisplay}>{hotkey}</span>
+      <span className={styles.shortcutDisplay}>{shown ?? "Not set"}</span>
       <button className={styles.recorderBtn} onClick={() => setRecording(true)}>
-        Change
+        {shown ? "Change" : "Set"}
       </button>
+      {kind === "palette" && paletteHotkey && (
+        <button className={styles.recorderBtn} onClick={clearPalette}>
+          Clear
+        </button>
+      )}
+      {error && <div className={`${styles.message} ${styles.error}`}>{error}</div>}
     </div>
   );
 }

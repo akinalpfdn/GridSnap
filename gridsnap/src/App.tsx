@@ -87,9 +87,12 @@ export default function App() {
           setVault(vault);
           useVaultStore.getState().setHasPassword(false);
           applyTheme(vault.settings.theme);
-          // Re-register saved shortcut if different from default
-          if (vault.settings.hotkey && vault.settings.hotkey !== "Ctrl+Shift+Space") {
-            changeShortcut(vault.settings.hotkey).catch(console.error);
+          // Re-register shortcuts when either differs from the boot defaults
+          if (
+            (vault.settings.hotkey && vault.settings.hotkey !== "Ctrl+Shift+Space") ||
+            vault.settings.paletteHotkey
+          ) {
+            changeShortcut(vault.settings.hotkey, vault.settings.paletteHotkey).catch(console.error);
           }
           setBooting(false);
           return;
@@ -202,12 +205,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const unlisten = listen("hotkey-summoned", () => {
+    const unlisten = listen("palette-summoned", () => {
       const store = useVaultStore.getState();
       if (store.locked || !store.vault) return;
-      if (store.vault.settings.openPaletteOnSummon) {
-        setQuickCopyOpen(true);
-      }
+      setQuickCopyOpen(true);
     });
     return () => {
       unlisten.then((fn) => fn());
@@ -262,8 +263,8 @@ export default function App() {
       setNeedsPassword(false);
       const v = useVaultStore.getState().vault;
       if (v) applyTheme(v.settings.theme);
-      if (v?.settings.hotkey && v.settings.hotkey !== "Ctrl+Shift+Space") {
-        changeShortcut(v.settings.hotkey).catch(console.error);
+      if ((v?.settings.hotkey && v.settings.hotkey !== "Ctrl+Shift+Space") || v?.settings.paletteHotkey) {
+        changeShortcut(v.settings.hotkey ?? "Ctrl+Shift+Space", v.settings.paletteHotkey).catch(console.error);
       }
     }} />;
   }
